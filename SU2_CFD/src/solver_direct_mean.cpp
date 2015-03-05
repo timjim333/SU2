@@ -6843,6 +6843,7 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
   double *Velocity_i, Velocity2_i, Enthalpy_i, Energy_i, StaticEnergy_i, Density_i, Kappa_i, Chi_i, Pressure_i, SoundSpeed_i;
   double ProjGridVel, ProjVelocity_i, ProjVelocity_b;
   double **P_Tensor, **invP_Tensor, *Lambda_i, **Jacobian_b, **DubDu, *dw, *u_e, *u_i, *u_b;
+  double *gridVel;
   
   double *V_boundary, *V_domain, *S_boundary, *S_domain;
   
@@ -7003,11 +7004,13 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
           
           for (iDim = 0; iDim < nDim; iDim++)
             Velocity_e[iDim] = VelMag_e*Flow_Dir[iDim];
+          StaticEnergy_e = StaticEnergy_i;
+          Energy_e = StaticEnergy_i + 0.5*VelMag_e*VelMag_e;
           
-          Energy_e = Energy_i;
-          
-          FluidModel->SetTDState_rhoe(Density_e, Energy_e);
-          
+//          FluidModel->SetTDState_rhoe(Density_e, StaticEnergy_e);
+//
+          if (tkeNeeded) Energy_e += GetTke_Inf();
+
           break;
           
         case STATIC_PRESSURE:
@@ -7026,6 +7029,7 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
           }
           
           Energy_e = FluidModel->GetStaticEnergy() + 0.5*Velocity2_e;
+          if (tkeNeeded) Energy_e += GetTke_Inf();
           
           break;
           
@@ -7111,7 +7115,16 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
       
       /*--- Compute inverse P (matrix of left eigenvectors)---*/
       conv_numerics->GetPMatrix_inv(invP_Tensor, &Density_i, Velocity_i, &SoundSpeed_i, &Chi_i, &Kappa_i, UnitNormal);
-      
+
+
+      if (grid_movement){
+    	  gridVel = geometry->node[iPoint]->GetGridVel();
+    	  double ProjGridVel = 0.0;
+    	  for (iDim = 0; iDim < nDim; iDim++)
+    	  	   ProjGridVel   += gridVel[iDim]*UnitNormal[iDim];
+    	  ProjVelocity_i -= ProjGridVel;
+      }
+
       /*--- Flow eigenvalues ---*/
       for (iDim = 0; iDim < nDim; iDim++)
         Lambda_i[iDim] = ProjVelocity_i;
@@ -7177,6 +7190,17 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
       /*--- Compute the residuals ---*/
       conv_numerics->GetInviscidProjFlux(&Density_b, Velocity_b, &Pressure_b, &Enthalpy_b, Normal, Residual);
       
+      if (grid_movement) {
+        double projVelocity = 0.0;
+        for (iDim = 0; iDim < nDim; iDim++)
+          projVelocity +=  gridVel[iDim]*Normal[iDim];
+        for (iVar = 0; iVar < nVar; iVar++)
+        	Residual[iVar] -= projVelocity *(u_b[iVar]);
+      }
+          /*--- Implicit terms ---*/
+
+
+
       if (implicit) {
         
         Jacobian_b = new double*[nVar];
@@ -7218,10 +7242,11 @@ void CEulerSolver::BC_Riemann(CGeometry *geometry, CSolver **solver_container,
         
         if (grid_movement)
         {
-          Jacobian_b[nVar-1][0] += 0.5*ProjGridVel*ProjGridVel;
-          
+          double projVelocity = 0.0;
           for (iDim = 0; iDim < nDim; iDim++)
-            Jacobian_b[nVar-1][iDim+1] -= ProjVelocity_b * UnitNormal[iDim];
+        	  projVelocity +=  gridVel[iDim]*Normal[iDim];
+          for (iVar = 0; iVar < nVar; iVar++)
+               Jacobian_b[iVar][iVar] -= projVelocity;
         }
         
         /*--- Compute numerical flux Jacobian at node i ---*/
