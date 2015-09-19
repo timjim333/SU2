@@ -3499,12 +3499,18 @@ void CEulerSolver::Upwind_Residual(CGeometry *geometry, CSolver **solver_contain
           Project_Grad_j += Vector_j[iDim]*Gradient_j[iVar][iDim]*Non_Physical;
         }
         if (limiter) {
-          Primitive_i[iVar] = V_i[iVar] + Limiter_i[iVar]*Project_Grad_i;
-          Primitive_j[iVar] = V_j[iVar] + Limiter_j[iVar]*Project_Grad_j;
-        }
-        else {
-          Primitive_i[iVar] = V_i[iVar] + Project_Grad_i;
-          Primitive_j[iVar] = V_j[iVar] + Project_Grad_j;
+            if (config->GetKind_SlopeLimit_Flow() == VAN_ALBADA){
+                Primitive_i[iVar] = V_i[iVar] + Project_Grad_i*(V_j[iVar]-V_i[iVar])*(2*Project_Grad_i + V_j[iVar]-V_i[iVar])/(4*Project_Grad_i*Project_Grad_i+(V_j[iVar]-V_i[iVar])*(V_j[iVar]-V_i[iVar])+EPS);
+                Primitive_j[iVar] = V_j[iVar] + Project_Grad_j*(V_j[iVar]-V_i[iVar])*(-2*Project_Grad_j + V_j[iVar]-V_i[iVar])/(4*Project_Grad_j*Project_Grad_j+(V_j[iVar]-V_i[iVar])*(V_j[iVar]-V_i[iVar])+EPS);
+                
+                
+            }else{
+                Primitive_i[iVar] = V_i[iVar] + Limiter_i[iVar]*Project_Grad_i;
+                Primitive_j[iVar] = V_j[iVar] + Limiter_j[iVar]*Project_Grad_j;
+            }
+        }else {
+            Primitive_i[iVar] = V_i[iVar] + Project_Grad_i;
+            Primitive_j[iVar] = V_j[iVar] + Project_Grad_j;
         }
       }
       
@@ -4865,8 +4871,8 @@ void CEulerSolver::SetPrimitive_Limiter(CGeometry *geometry, CConfig *config) {
 
   unsigned long iEdge, iPoint, jPoint;
   unsigned short iVar, iDim;
-  su2double **Gradient_i, **Gradient_j, *Coord_i, *Coord_j, *Primitive_i, *Primitive_j,
-  dave, LimK, eps2, eps1, dm, dp, du, y, limiter;
+  su2double **Gradient_i, **Gradient_j, *Coord_i, *Coord_j, *Primitive_i, *Primitive_j, *V_i, *V_j,
+  dave, LimK, eps2, eps1, dm, dp, du, y, limiter, Project_Grad_i, Project_Grad_j, Non_Physical;
 
   /*--- Initialize solution max and solution min and the limiter in the entire domain --*/
 
@@ -5022,7 +5028,42 @@ void CEulerSolver::SetPrimitive_Limiter(CGeometry *geometry, CConfig *config) {
     }
 
   }
-
+  
+    
+//    /*--- van Albada limiter ---*/
+//    
+//  if (config->GetKind_SlopeLimit_Flow() == VAN_ALBADA) {
+//      for (iEdge = 0; iEdge < geometry->GetnEdge(); iEdge++) {
+//          
+//          iPoint     = geometry->edge[iEdge]->GetNode(0);
+//          jPoint     = geometry->edge[iEdge]->GetNode(1);
+//          Gradient_i = node[iPoint]->GetGradient_Primitive();
+//          Gradient_j = node[jPoint]->GetGradient_Primitive();
+//          V_i = node[iPoint]->GetPrimitive();
+//          V_j = node[jPoint]->GetPrimitive();
+//          
+//          for (iDim = 0; iDim < nDim; iDim++) {
+//              Vector_i[iDim] = 0.5*(geometry->node[jPoint]->GetCoord(iDim) - geometry->node[iPoint]->GetCoord(iDim));
+//              Vector_j[iDim] = 0.5*(geometry->node[iPoint]->GetCoord(iDim) - geometry->node[jPoint]->GetCoord(iDim));
+//          }
+//          
+//          for (iVar = 0; iVar < nPrimVarGrad; iVar++) {
+//              Project_Grad_i = 0.0; Project_Grad_j = 0.0;
+//              Non_Physical = node[iPoint]->GetNon_Physical()*node[jPoint]->GetNon_Physical();
+//              for (iDim = 0; iDim < nDim; iDim++) {
+//                  Project_Grad_i += Vector_i[iDim]*Gradient_i[iVar][iDim]*Non_Physical;
+//                  Project_Grad_j += Vector_j[iDim]*Gradient_j[iVar][iDim]*Non_Physical;
+//              }
+//              limiter= (V_j[iVar]-V_i[iVar])*(2*Project_Grad_i + V_j[iVar]-V_i[iVar])/(4*Project_Grad_i*Project_Grad_i+(V_j[iVar]-V_i[iVar])*(V_j[iVar]-V_i[iVar])+EPS);
+//              node[iPoint]->SetLimiter_Primitive(iVar, limiter);
+//              cout << node[iPoint]->GetLimiter_Primitive(iVar) << endl;
+//              limiter= (V_j[iVar]-V_i[iVar])*(-2*Project_Grad_j + V_j[iVar]-V_i[iVar])/(4*Project_Grad_j*Project_Grad_j+(V_j[iVar]-V_i[iVar])*(V_j[iVar]-V_i[iVar])+EPS);
+//              node[jPoint]->SetLimiter_Primitive(iVar, limiter);
+//              
+//              
+//          }
+//      }
+//  }
   /*--- Limiter MPI ---*/
 
   Set_MPI_Primitive_Limiter(geometry, config);
