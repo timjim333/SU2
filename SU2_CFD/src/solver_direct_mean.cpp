@@ -3079,19 +3079,16 @@ void CEulerSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container
 
     if (config->GetKind_Gradient_Method() == GREEN_GAUSS) {
     	SetPrimitive_Gradient_GG(geometry, config);
-//    	if (compressible && !ideal_gas) SetSecondary_Gradient_GG(geometry, config);
     }
     if (config->GetKind_Gradient_Method() == WEIGHTED_LEAST_SQUARES) {
     	SetPrimitive_Gradient_LS(geometry, config);
-//    	if (compressible && !ideal_gas) SetSecondary_Gradient_LS(geometry, config);
     }
 
 
     /*--- Limiter computation ---*/
 
-    if ((limiter) && (iMesh == MESH_0)) {
+      if ((limiter) && (iMesh == MESH_0) && (config->GetKind_SlopeLimit()!=VAN_ALBADA)) {
     	SetPrimitive_Limiter(geometry, config);
-//    	if (compressible && !ideal_gas) SetSecondary_Limiter(geometry, config);
     }
 
   }
@@ -10882,6 +10879,7 @@ void CNSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, C
   bool limiter_turb         = ((config->GetSpatialOrder_Turb() == SECOND_ORDER_LIMITER) && (ExtIter <= config->GetLimiterIter()));
   bool limiter_adjflow      = ((config->GetSpatialOrder_AdjFlow() == SECOND_ORDER_LIMITER) && (ExtIter <= config->GetLimiterIter()));
   bool limiter_visc         = config->GetViscous_Limiter_Flow();
+  bool no_van_albada        = (config->GetKind_SlopeLimit() != VAN_ALBADA);
   bool compressible         = (config->GetKind_Regime() == COMPRESSIBLE);
   bool incompressible       = (config->GetKind_Regime() == INCOMPRESSIBLE);
   bool freesurface          = (config->GetKind_Regime() == FREESURFACE);
@@ -10952,18 +10950,16 @@ void CNSSolver::Preprocessing(CGeometry *geometry, CSolver **solver_container, C
 
   if (config->GetKind_Gradient_Method() == GREEN_GAUSS) {
 	  SetPrimitive_Gradient_GG(geometry, config);
-//	  if (compressible && !ideal_gas) SetSecondary_Gradient_GG(geometry, config);
   }
   if (config->GetKind_Gradient_Method() == WEIGHTED_LEAST_SQUARES) {
 	  SetPrimitive_Gradient_LS(geometry, config);
-//	  if (compressible && !ideal_gas) SetSecondary_Gradient_LS(geometry, config);
   }
   
   /*--- Compute the limiter in case we need it in the turbulence model
    or to limit the viscous terms (check this logic with JST and 2nd order turbulence model) ---*/
 
-  if ((iMesh == MESH_0) && (limiter_flow || limiter_turb || limiter_adjflow || limiter_visc)) { SetPrimitive_Limiter(geometry, config);
-//  if (compressible && !ideal_gas) SetSecondary_Limiter(geometry, config);
+  if ((iMesh == MESH_0) && ((limiter_flow && no_van_albada) || limiter_turb || limiter_adjflow || limiter_visc)) {
+      SetPrimitive_Limiter(geometry, config);
   }
   
   /*--- Evaluate the vorticity and strain rate magnitude ---*/
