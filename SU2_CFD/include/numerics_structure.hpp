@@ -2055,28 +2055,27 @@ public:
  * \class CUpwGeneralHLLC_Flow
  * \brief Class for solving an approximate Riemann AUSM.
  * \ingroup ConvDiscr
- * \author F. Palacios, based on the Joe code implementation
+ * \author G. Gori, Politecnico di Milano
  * \version 4.0.2 "Cardinal"
  */
 class CUpwGeneralHLLC_Flow : public CNumerics {
 private:
-  bool implicit;
-  unsigned short iDim, iVar, jVar, kVar;
+  bool implicit, grid_movement;
+  unsigned short iDim, jDim, iVar, jVar;
   
-  su2double *Diff_U;
+  su2double *IntermediateState;
   su2double *Velocity_i, *Velocity_j, *RoeVelocity;
-  su2double *ProjFlux_i, *ProjFlux_j;
-  su2double *delta_wave, *delta_vel;
-  su2double *Lambda, *Epsilon;
-  su2double **P_Tensor, **invP_Tensor;
-  
+
   su2double sq_vel_i, Density_i, Energy_i, SoundSpeed_i, Pressure_i, Enthalpy_i, ProjVelocity_i, StaticEnthalpy_i, StaticEnergy_i;
   su2double sq_vel_j, Density_j, Energy_j, SoundSpeed_j, Pressure_j, Enthalpy_j, ProjVelocity_j, StaticEnthalpy_j, StaticEnergy_j;
   
-  su2double sq_velRoe, Proj_ModJac_Tensor_ij, RoeDensity, RoeEnthalpy, RoeSoundSpeed, RoeSoundSpeed2, RoeProjVelocity;
+  su2double sq_velRoe, ProjVelocity, RoeDensity, RoeEnthalpy, RoeSoundSpeed, RoeSoundSpeed2, RoeProjVelocity;
   su2double Kappa_i, Kappa_j, Chi_i, Chi_j, RoeKappa, RoeChi, RoeKappaStaticEnthalpy;
 
-  su2double sL, sR, sM, pStar, invSLmSs, sLmuL, rhoSL, rhouSL[3], Rrho, eSL, invSRmSs, sRmuR, rhoSR, rhouSR[3], eSR, kappa;
+  su2double sL, sR, sM, pStar, EStar, rhoSL, rhoSR, Rrho, kappa;
+
+  su2double Omega, RHO, OmegaSM;
+  su2double *dSm_dU, *dPI_dU, *drhoStar_dU, *dpStar_dU, *dEStar_dU;
 
   
 public:
