@@ -763,7 +763,7 @@ class CDiscAdjMeanFlowIteration : public CIteration {
 
 private:
 
-  CIteration* meanflow_iteration; /*!< \brief Pointer to the mean flow iteration class. */
+  CMeanFlowIteration* meanflow_iteration; /*!< \brief Pointer to the mean flow iteration class. */
   unsigned short CurrentRecording; /*!< \brief Stores the current status of the recording. */
   bool turbulent;       /*!< \brief Stores the turbulent flag. */
 

@@ -93,7 +93,7 @@ def gradient( func_name, method, config, state=None ):
                 config.OBJ_CHAIN_RULE_COEFF = str(chaingrad)
                 
             # Aerodynamics
-            if func_name in su2io.optnames_aero:
+            if func_name in su2io.optnames_aero + su2io.optnames_turbo:
                 grads = adjoint( func_name, config, state )
 
             # Stability
@@ -818,10 +818,15 @@ def directdiff( config, state=None ):
                     if key == 'VARIABLE':
                         grads[key].append(i_dv)
                     else:
-                        this_grad = func_step[su2io.grad_names_map[key]]
-                        grads[key].append(this_grad)
-                #: for each grad name
+                        if su2io.grad_names_map[key] in func_step:
+                            this_grad = func_step[su2io.grad_names_map[key]]
+                            grads[key].append(this_grad)
+                        else:
+                            del grads[key]
 
+
+
+                #: for each grad name
                 su2util.write_plot(grad_filename,output_format,grads)
                 os.remove(temp_config_name)
 

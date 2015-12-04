@@ -1170,13 +1170,18 @@ void CDiscAdjMeanFlowIteration::Preprocess(COutput *output,
                                            CFreeFormDefBox*** FFDBox,
                                            unsigned short val_iZone) {
   
+  unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
   unsigned short ExtIter = config_container[val_iZone]->GetExtIter();
   
   int rank = MASTER_NODE;
 #ifdef HAVE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
-  
+  if (ExtIter == 0){
+    if (config_container[val_iZone]->GetGrid_Movement()) {
+      SetGrid_Movement(geometry_container[val_iZone], surface_movement[val_iZone], grid_movement[val_iZone], FFDBox[val_iZone], solver_container[val_iZone], config_container[val_iZone], val_iZone, IntIter, ExtIter);
+    }
+  }
   if (CurrentRecording != FLOW_VARIABLES){
     
     if ((rank == MASTER_NODE) && (ExtIter == 0)){
@@ -1244,7 +1249,7 @@ void CDiscAdjMeanFlowIteration::Iterate(COutput *output,
   integration_container[val_iZone][ADJFLOW_SOL]->Convergence_Monitoring(geometry_container[val_iZone][MESH_0],config_container[val_iZone],
                                                                         ExtIter,log10(solver_container[val_iZone][MESH_0][ADJFLOW_SOL]->GetRes_RMS(0)), MESH_0);
   
-  if (((unsigned short)(ExtIter+1) >= config_container[val_iZone]->GetnExtIter()) ||
+  if ((ExtIter+1 >= config_container[val_iZone]->GetnExtIter()) || (integration_container[val_iZone][ADJFLOW_SOL]->GetConvergence()) ||
       ((ExtIter % config_container[val_iZone]->GetWrt_Sol_Freq() == 0))){
     
     /*--- Record one mean flow iteration with geometry variables as input ---*/
@@ -1280,16 +1285,34 @@ void CDiscAdjMeanFlowIteration::SetRecording(COutput *output,
                                              unsigned short val_iZone,
                                              unsigned short kind_recording)      {
   
+  unsigned long IntIter = 0; config_container[ZONE_0]->SetIntIter(IntIter);
+  unsigned long ExtIter = config_container[ZONE_0]->GetExtIter();
   unsigned short iMesh;
   
   /*--- Reset the tape ---*/
   
   AD::Reset();
   
+  for (iMesh = 0; iMesh <= config_container[val_iZone]->GetnMGLevels(); iMesh++){
+
+    solver_container[val_iZone][iMesh][ADJFLOW_SOL]->SetRecording(geometry_container[val_iZone][MESH_0], config_container[val_iZone], kind_recording);
+
+    if (turbulent){
+      solver_container[val_iZone][iMesh][ADJTURB_SOL]->SetRecording(geometry_container[val_iZone][MESH_0], config_container[val_iZone], kind_recording);
+    }
+  }
+
+
   /*--- Update geometry to set all indices to zero ---*/
   
   geometry_container[val_iZone][MESH_0]->UpdateGeometry(geometry_container[val_iZone], config_container[val_iZone]);
   
+  if(config_container[val_iZone]->GetBoolMixingPlane())
+    meanflow_iteration->SetMixingPlane(geometry_container, solver_container, config_container, val_iZone);
+
+  if(config_container[val_iZone]->GetBoolTurboPerf())
+    meanflow_iteration->SetMPITurboPerformance(geometry_container, solver_container, config_container, output, val_iZone);
+
   /*--- Run one iteration while tape is passive - this clears all indices ---*/
   
   meanflow_iteration->Iterate(output,integration_container,geometry_container,solver_container,numerics_container,
@@ -1314,6 +1337,14 @@ void CDiscAdjMeanFlowIteration::SetRecording(COutput *output,
   
   RegisterInput(solver_container, geometry_container, config_container, val_iZone, kind_recording);
   
+  /*--- Calculate and set Mixing Plane averaged quantities at interfaces ---*/
+
+  if(config_container[val_iZone]->GetBoolMixingPlane())
+    meanflow_iteration->SetMixingPlane(geometry_container, solver_container, config_container, val_iZone);
+
+  if(config_container[val_iZone]->GetBoolTurboPerf())
+    meanflow_iteration->SetMPITurboPerformance(geometry_container, solver_container, config_container, output, val_iZone);
+
   /*--- Run the direct iteration ---*/
   
   meanflow_iteration->Iterate(output,integration_container,geometry_container,solver_container,numerics_container,

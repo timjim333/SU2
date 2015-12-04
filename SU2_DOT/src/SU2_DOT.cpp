@@ -352,8 +352,30 @@ int main(int argc, char *argv[]) {
           case OUTLET_CHAIN_RULE :
             if (iDV == 0) Gradient_file << "Chain rule grad. using cont. adj."<< endl;
             cout << "Gradient by chain rule: "<< Gradient << "." << endl; break;
-
-
+          case TOTAL_PRESSURE_LOSS :
+            if (iDV == 0) Gradient_file << "Total Pressure Loss grad. using disc. adj." << endl;
+            cout << "Total Pressure Loss gradient: " << Gradient << "." << endl; break;
+          case FLOW_ANGLE_OUT:
+            if (iDV == 0) Gradient_file << "Flow Angle Out grad. using disc. adj." << endl;
+            cout << "Flow Angle Out gradient: " << Gradient << "." << endl; break;
+          case FLOW_ANGLE_IN:
+            if (iDV == 0) Gradient_file << "Flow Angle In grad. using disc. adj." << endl;
+            cout << "Flow Angle In gradient: " << Gradient << "." << endl; break;
+          case TOTAL_EFFICIENCY:
+            if (iDV == 0) Gradient_file << "Total Efficiency grad. using disc. adj." << endl;
+            cout << "Total Efficiency gradient: " << Gradient << "." << endl; break;
+          case TOTAL_STATIC_EFFICIENCY:
+            if (iDV == 0) Gradient_file << "Total Static Efficiency grad. using disc. adj." << endl;
+            cout << "Total Static Efficiency gradient: " << Gradient << "." << endl; break;
+          case MASS_FLOW_IN:
+            if (iDV == 0) Gradient_file << "Mass Flow In grad. using disc. adj." << endl;
+            cout << "Mass Flow In gradient: " << Gradient << "." << endl; break;
+          case MASS_FLOW_OUT:
+            if (iDV == 0) Gradient_file << "Mass Flow Out grad. using disc. adj." << endl;
+            cout << "Mass Flow Out gradient: " << Gradient << "." << endl; break;
+          case KINETIC_ENERGY_LOSS:
+            if (iDV == 0) Gradient_file << "Kinetic Energy Loss grad. using disc. adj." << endl;
+            cout << "Kinetic Energy Loss gradient: " << Gradient << "." << endl; break;
         }
 
         Gradient_file << Gradient << endl;
@@ -645,7 +667,9 @@ int main(int argc, char *argv[]) {
           case OUTLET_CHAIN_RULE :
              if (iDV == 0) Gradient_file << "Chain rule grad. using cont. adj."<< endl;
              cout << "Gradient by chain rule: "<< Gradient << "." << endl; break;
-
+          case TOTAL_PRESSURE_LOSS :
+            if (iDV == 0) Gradient_file << "Total Pressure Loss grad. using disc. adj." << endl;
+            cout << "Total Pressure Loss gradient: " << Gradient << "." << endl; break;
         }
 
         Gradient_file << Gradient << endl;
