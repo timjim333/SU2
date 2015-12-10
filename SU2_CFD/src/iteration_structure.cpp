@@ -1177,11 +1177,7 @@ void CDiscAdjMeanFlowIteration::Preprocess(COutput *output,
 #ifdef HAVE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
-  if (ExtIter == 0){
-    if (config_container[val_iZone]->GetGrid_Movement()) {
-      SetGrid_Movement(geometry_container[val_iZone], surface_movement[val_iZone], grid_movement[val_iZone], FFDBox[val_iZone], solver_container[val_iZone], config_container[val_iZone], val_iZone, IntIter, ExtIter);
-    }
-  }
+
   if (CurrentRecording != FLOW_VARIABLES){
     
     if ((rank == MASTER_NODE) && (ExtIter == 0)){
@@ -1301,12 +1297,19 @@ void CDiscAdjMeanFlowIteration::SetRecording(COutput *output,
       solver_container[val_iZone][iMesh][ADJTURB_SOL]->SetRecording(geometry_container[val_iZone][MESH_0], config_container[val_iZone], kind_recording);
     }
   }
-
-
+  if (config_container[val_iZone]->GetKind_GridMovement(val_iZone) == ROTATING_FRAME){
+    geometry_container[val_iZone][MESH_0]->SetRotationalVelocity(config_container[val_iZone],val_iZone);
+  }
   /*--- Update geometry to set all indices to zero ---*/
   
   geometry_container[val_iZone][MESH_0]->UpdateGeometry(geometry_container[val_iZone], config_container[val_iZone]);
   
+  if (turbulent){
+    solver_container[val_iZone][MESH_0][FLOW_SOL]->SetPrimitive_Variables(solver_container[val_iZone][MESH_0], config_container[val_iZone], false);
+    solver_container[val_iZone][MESH_0][TURB_SOL]->Postprocessing(geometry_container[val_iZone][MESH_0],solver_container[val_iZone][MESH_0], config_container[val_iZone], MESH_0);
+  }
+
+
   if(config_container[val_iZone]->GetBoolMixingPlane())
     meanflow_iteration->SetMixingPlane(geometry_container, solver_container, config_container, val_iZone);
 
@@ -1385,13 +1388,6 @@ void CDiscAdjMeanFlowIteration::RegisterInput(CSolver ****solver_container, CGeo
     if (turbulent){
       solver_container[iZone][MESH_0][ADJTURB_SOL]->RegisterSolution(geometry_container[iZone][MESH_0], config_container[iZone]);
     }
-    
-    /*--- Compute coupling between flow and turbulent equations ---*/
-    
-    if (turbulent){
-      solver_container[iZone][MESH_0][FLOW_SOL]->SetPrimitive_Variables(solver_container[iZone][MESH_0], config_container[iZone], false);
-      solver_container[iZone][MESH_0][TURB_SOL]->Postprocessing(geometry_container[iZone][MESH_0],solver_container[iZone][MESH_0], config_container[iZone], MESH_0);
-    }
   }
   else if (kind_recording == GEOMETRY_VARIABLES){
     
@@ -1399,12 +1395,22 @@ void CDiscAdjMeanFlowIteration::RegisterInput(CSolver ****solver_container, CGeo
     
     geometry_container[iZone][MESH_0]->RegisterCoordinates(config_container[iZone]);
     
+    if (config_container[iZone]->GetKind_GridMovement(iZone) == ROTATING_FRAME){
+      geometry_container[iZone][MESH_0]->SetRotationalVelocity(config_container[iZone],iZone);
+    }
     /*--- Update geometry to get the influence on other geometry variables (normals, volume etc) ---*/
     
     geometry_container[iZone][MESH_0]->UpdateGeometry(geometry_container[iZone], config_container[iZone]);
-    
+
   }
-  
+
+  /*--- Compute coupling between flow and turbulent equations ---*/
+
+  if (turbulent){
+    solver_container[iZone][MESH_0][FLOW_SOL]->SetPrimitive_Variables(solver_container[iZone][MESH_0], config_container[iZone], false);
+    solver_container[iZone][MESH_0][TURB_SOL]->Postprocessing(geometry_container[iZone][MESH_0],solver_container[iZone][MESH_0], config_container[iZone], MESH_0);
+  }
+
 }
 
 void CDiscAdjMeanFlowIteration::RegisterOutput(CSolver ****solver_container, CGeometry ***geometry_container, CConfig **config_container, unsigned short iZone){
