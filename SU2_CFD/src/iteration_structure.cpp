@@ -113,8 +113,18 @@ void CMeanFlowIteration::Preprocess(COutput *output,
   
   /*--- Compute turboperformance ---*/
   
-  if(config_container[val_iZone]->GetBoolTurboPerf())
-    SetTurboPerformance(geometry_container, solver_container, config_container, output, val_iZone);
+  if(config_container[val_iZone]->GetBoolTurboPerf()){
+#ifdef HAVE_MPI
+  	int size = SINGLE_NODE;
+  	MPI_Comm_size(MPI_COMM_WORLD, &size);
+ 	if(size > 1)
+  		SetMPITurboPerformance(geometry_container, solver_container, config_container, output, val_iZone);
+ 	else
+  		SetTurboPerformance(geometry_container, solver_container, config_container, output, val_iZone);
+#else
+  	SetTurboPerformance(geometry_container, solver_container, config_container, output, val_iZone);
+#endif
+  }
 }
 
 
@@ -584,7 +594,6 @@ void CMeanFlowIteration::SetTurboPerformance(CGeometry ***geometry_container, CS
   unsigned short nZone = geometry_container[iZone][MESH_0]->GetnZone();
   string inMarker_Tag, outMarker_Tag;
   
-  
   /*-- Loop on all the boundary to find MIXING_PLANE boundary --*/
   for (inMarker = 0; inMarker < config_container[iZone]->GetnMarker_All(); inMarker++)
     for (inMarkerTP=0; inMarkerTP < config_container[iZone]->Get_nMarkerTurboPerf(); inMarkerTP++)
@@ -600,6 +609,15 @@ void CMeanFlowIteration::SetTurboPerformance(CGeometry ***geometry_container, CS
               solver_container[ZONE_0][MESH_0][FLOW_SOL]->StoreTurboPerformance(solver_container[iZone][MESH_0][FLOW_SOL], inMarkerTP);
             }
       }
+
+  }
+
+void CMeanFlowIteration::SetMPITurboPerformance(CGeometry ***geometry_container, CSolver ****solver_container, CConfig **config_container, COutput *output, unsigned short iZone) {
+
+solver_container[iZone][MESH_0][FLOW_SOL]->MPIMixing_Process(geometry_container[iZone][MESH_0], solver_container[iZone][MESH_0], config_container[iZone], INFLOW);
+solver_container[iZone][MESH_0][FLOW_SOL]->MPIMixing_Process(geometry_container[iZone][MESH_0], solver_container[iZone][MESH_0], config_container[iZone], OUTFLOW);
+solver_container[iZone][MESH_0][FLOW_SOL]->MPITurboPerformance(config_container[iZone]);
+
 }
 
 

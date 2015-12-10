@@ -905,6 +905,15 @@ public:
 	virtual void Mixing_Process(CGeometry *geometry, CSolver **solver_container, CConfig *config, unsigned short val_Marker);
 
 	/*!
+	 * \brief It performs the average value along a boundary.
+	 * \param[in] geometry - Geometrical definition of the problem.
+	 * \param[in] solver_container - Container vector with all the solutions.
+     * \param[in] config - Definition of the particular problem.
+	 * \param[in] val_marker - Surface marker where the average is evaluated.
+	 */
+	virtual void MPIMixing_Process(CGeometry *geometry, CSolver **solver_container, CConfig *config, unsigned short marker_flag);
+
+	/*!
 	 * \brief it performs a mixed out average of the nodes of a boundary.
 	 * \param[in] val_init_pressure -  initial pressure value
 	 * \param[in] val_Averaged_Flux - flux averaged values.
@@ -1238,6 +1247,11 @@ public:
 	 */
 	virtual void TurboPerformance(CSolver *solver,  CConfig *config, unsigned short inMarker,  unsigned short outMarker, unsigned short Kind_TurboPerf, unsigned short inMarkerTP);
 
+	/*!
+	 * \brief A virtual member.
+	 * \param[in] config - contains config file information.
+	 */
+	virtual void MPITurboPerformance(CConfig *config);
 	/*!
 	 * \brief A virtual member.
 	 * \param[in] solver - solver containing the outlet information.
@@ -3471,6 +3485,15 @@ public:
 	void Mixing_Process(CGeometry *geometry, CSolver **solver_container, CConfig *config, unsigned short val_Marker);
 
 	/*!
+	 * \brief It avarage the fluxes value along a boundary.
+	 * \param[in] geometry - Geometrical definition of the problem.
+	 * \param[in] solver_container - Container vector with all the solutions.
+     * \param[in] config - Definition of the particular problem.
+	 * \param[in] val_marker - Surface marker where the boundary condition is applied.
+	 */
+	void MPIMixing_Process(CGeometry *geometry, CSolver **solver_container, CConfig *config, unsigned short marker_flag);
+
+	/*!
 	 * \brief it performs a mixed out average of the nodes of a boundary.
 	 * \param[in] val_init_pressure -  initial pressure value
 	 * \param[in] val_Averaged_Flux - flux averaged values.
@@ -3817,6 +3840,12 @@ public:
 	 * \param[in] outMarker - marker related to the outlet.
 	 */
 	void TurboPerformance(CSolver *solver,  CConfig *config, unsigned short inMarker,  unsigned short outMarker, unsigned short Kind_TurboPerf , unsigned short inMarkerTP );
+
+	/*!
+	 * \brief Compute turbomachinery performance.
+	 * \param[in] config - contains config file information.
+	 */
+	void MPITurboPerformance(CConfig *config);
 
 	/*!
 	 * \brief Compute turbomachinery performance.

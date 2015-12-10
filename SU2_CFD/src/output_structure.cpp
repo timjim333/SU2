@@ -4540,23 +4540,23 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
 											cout << "   Total Pressure Loss(%)" << "   Kinetic Energy Loss(%)" << "            Eulerian Work" << endl;
 											cout.width(25); cout << TotalPressureLoss[iMarker_Monitoring]*100.0;
 											cout.width(25); cout << KineticEnergyLoss[iMarker_Monitoring]*100.0;
-											cout.width(25); cout << EulerianWork[iMarker_Monitoring];
+											cout.width(25); cout << EulerianWork[iMarker_Monitoring]*config[ZONE_0]->GetEnergy_Ref();
 											cout << endl;
 											cout << endl;
 											cout << "     Total Inlet Enthalpy" << "          Outlet Enthalpy" << "            D_MassFlow(%)" <<  endl;
-											cout.width(25); cout << TotalEnthalpyIn[iMarker_Monitoring];
-											cout.width(25); cout << EnthalpyOut[iMarker_Monitoring];
+											cout.width(25); cout << TotalEnthalpyIn[iMarker_Monitoring]*config[ZONE_0]->GetEnergy_Ref();
+											cout.width(25); cout << EnthalpyOut[iMarker_Monitoring]*config[ZONE_0]->GetEnergy_Ref();
 											cout.width(25); cout << abs((MassFlowIn[iMarker_Monitoring] + MassFlowOut[iMarker_Monitoring])/MassFlowIn[iMarker_Monitoring])*100.0;
 											cout << endl;
 											cout << endl;
 											cout << "   Isentropic Outlet Vel." << "         Inlet Flow Angle" << "        Outlet Flow Angle" <<endl;
-											cout.width(25); cout << VelocityOutIs[iMarker_Monitoring];
+											cout.width(25); cout << VelocityOutIs[iMarker_Monitoring]*config[ZONE_0]->GetVelocity_Ref();
 											cout.width(25); cout << 180.0/PI_NUMBER*FlowAngleIn[iMarker_Monitoring];
 											cout.width(25); cout << 180.0/PI_NUMBER*FlowAngleOut[iMarker_Monitoring];
 											cout << endl;
 											cout << endl;
 											cout << "          Inlet Mass Flow"<< "               Inlet Mach" << "              Outlet Mach" << endl;
-											cout.width(25); cout << MassFlowIn[iMarker_Monitoring];
+											cout.width(25); cout << MassFlowIn[iMarker_Monitoring]*config[ZONE_0]->GetVelocity_Ref()*config[ZONE_0]->GetDensity_Ref();
 											cout.width(25); cout << MachIn[iMarker_Monitoring];
 											cout.width(25); cout << MachOut[iMarker_Monitoring];
 											cout << endl;
@@ -4568,7 +4568,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
 											cout << endl;
 											cout << "           Pressure Ratio" << "         Outlet Pressure" << endl;
 											cout.width(25); cout << PressureRatio[iMarker_Monitoring];
-											cout.width(25); cout << PressureOut[iMarker_Monitoring];
+											cout.width(25); cout << PressureOut[iMarker_Monitoring]*config[ZONE_0]->GetPressure_Ref();
 											cout << endl;
 											cout << endl << "-------------------------------------------------------------------------" << endl;
 											cout << endl;
@@ -4684,7 +4684,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
 //            if (!fluid_structure) {
               if (incompressible) cout << "   Res[Press]" << "     Res[Velx]" << "   CLift(Total)" << "   CDrag(Total)" << endl;
               else if (freesurface) cout << "   Res[Press]" << "     Res[Dist]" << "   CLift(Total)" << "     CLevelSet" << endl;
-              else if (rotating_frame && nDim == 3) cout << "     Res[Rho]" << "     Res[RhoE]" << " CThrust(Total)" << " CTorque(Total)" << endl;
+              else if (rotating_frame && nDim == 3 && !turbo) cout << "     Res[Rho]" << "     Res[RhoE]" << " CThrust(Total)" << " CTorque(Total)" << endl;
               else if (aeroelastic) cout << "     Res[Rho]" << "     Res[RhoE]" << "   CLift(Total)" << "   CDrag(Total)" << "         plunge" << "          pitch" << endl;
               else if (equiv_area) cout << "     Res[Rho]" << "   CLift(Total)" << "   CDrag(Total)" << "    CPress(N-F)" << endl;
               else if (turbo)
@@ -4745,7 +4745,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
             }
             
             if (transition) { cout << "      Res[Int]" << "       Res[Re]"; }
-            else if (rotating_frame && nDim == 3 ) cout << "   CThrust(Total)" << "   CTorque(Total)" << endl;
+            else if (rotating_frame && nDim == 3 && !turbo ) cout << "   CThrust(Total)" << "   CTorque(Total)" << endl;
             else if (aeroelastic) cout << "   CLift(Total)" << "   CDrag(Total)" << "         plunge" << "          pitch" << endl;
             else if (equiv_area) cout << "   CLift(Total)" << "   CDrag(Total)" << "    CPress(N-F)" << endl;
             else if (turbo)
@@ -4929,7 +4929,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
           }
 //          else if (fluid_structure) { cout.width(14); cout << log10(residual_fea[0]); }
           
-          if (rotating_frame && nDim == 3 ) {
+          if (rotating_frame && nDim == 3 && !turbo ) {
             cout.setf(ios::scientific, ios::floatfield);
             cout.width(15); cout << Total_CT;
             cout.width(15); cout << Total_CQ;
@@ -4949,7 +4949,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
           			break;
           		case STAGE: case TURBINE:
           			cout.width(15); cout << TotalStaticEfficiency[0]*100.0;
-          			cout.width(15); cout << PressureOut[0];
+          			cout.width(15); cout << PressureOut[0]*config[ZONE_0]->GetPressure_Ref();
           			break;
           		default:
           			break;
@@ -5000,7 +5000,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
           
           if (transition) { cout.width(14); cout << log10(residual_transition[0]); cout.width(14); cout << log10(residual_transition[1]); }
           
-          if (rotating_frame && nDim == 3 ) {
+          if (rotating_frame && nDim == 3 && !turbo ) {
             cout.setf(ios::scientific, ios::floatfield);
             cout.width(15); cout << Total_CT; cout.width(15);
             cout << Total_CQ;
@@ -5019,7 +5019,7 @@ void COutput::SetConvHistory_Body(ofstream *ConvHist_file,
         			break;
         		case STAGE: case TURBINE:
         			cout.width(15); cout << TotalStaticEfficiency[0]*100.0;
-					cout.width(15); cout << PressureOut[0];
+					cout.width(15); cout << PressureOut[0]*config[ZONE_0]->GetPressure_Ref();
 					break;
         		default:
         			break;
