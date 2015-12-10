@@ -540,7 +540,7 @@ def get_adjointSuffix(objective_function=None):
                  "KINETIC_ENERGY_LOSS"     : "ke"        ,
                  "TOTAL_PRESSURE_LOSS"     : "pl"        ,
                  "FLOW_ANGLE_OUT"          : "fao"       ,
-                 "FLOW_ANGLE_INT"          : "fai"       ,
+                 "FLOW_ANGLE_IN"           : "fai"       ,
                  "TOTAL_EFFICIENCY"        : "teff"      ,
                  "TOTAL_STATIC_EFFICIENCY" : "tseff"     ,
                  "EULERIAN_WORK"           : "ew"        ,
