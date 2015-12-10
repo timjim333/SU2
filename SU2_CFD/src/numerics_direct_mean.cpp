@@ -1175,7 +1175,7 @@ CUpwGeneralHLLC_Flow::~CUpwGeneralHLLC_Flow(void) {
 }
 
 void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config) {
-  
+  //su2double old_velocity_i[3], old_velocity_j[3]
 
   /*--- Face area (norm or the normal vector) ---*/
   
@@ -1195,8 +1195,15 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
 
   if (grid_movement) {
 	ProjVelocity = 0.0;
-	for (iDim = 0; iDim < nDim; iDim++)
+	for (iDim = 0; iDim < nDim; iDim++){
 		ProjVelocity += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] ) * Normal[iDim];
+	//	old_velocity_i[iDim] = Velocity_i[iDim];
+	//	old_velocity_j[iDim] = Velocity_j[iDim];
+
+		Velocity_i[iDim] -= GridVel_i[iDim];
+		Velocity_j[iDim] -= GridVel_j[iDim];
+	}
+
   }
   
   /*--- Primitive variables at point i ---*/
@@ -1724,6 +1731,15 @@ if (sM >= 0.0) {
 	}
 
   }
+
+if (grid_movement) {
+	for (iDim = 0; iDim < nDim; iDim++){
+		Velocity_i[iDim] += GridVel_i[iDim];
+		Velocity_j[iDim] += GridVel_j[iDim];
+	}
+
+  }
+
 }
 
 void CUpwGeneralHLLC_Flow::VinokurMontagne() {
