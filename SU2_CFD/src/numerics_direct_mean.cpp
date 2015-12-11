@@ -1190,18 +1190,26 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   for (iDim = 0; iDim < nDim; iDim++)
     UnitNormal[iDim] = Normal[iDim] / Area;
 
+  for (iDim = 0; iDim < nDim; iDim++) {
+    Velocity_i[iDim]  = V_i[iDim+1];
+    Velocity_j[iDim]  = V_j[iDim+1];
+  }
 
   /*--- Projected Grid Velocity ---*/
-
+su2double Vi2=0,Vj2=0;
   if (grid_movement) {
 	ProjVelocity = 0.0;
 	for (iDim = 0; iDim < nDim; iDim++){
 		ProjVelocity += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] ) * Normal[iDim];
-	//	old_velocity_i[iDim] = Velocity_i[iDim];
-	//	old_velocity_j[iDim] = Velocity_j[iDim];
 
-		Velocity_i[iDim] -= GridVel_i[iDim];
-		Velocity_j[iDim] -= GridVel_j[iDim];
+Vi2 += Velocity_i[iDim]*Velocity_i[iDim];
+Vj2 += Velocity_j[iDim]*Velocity_j[iDim];
+
+		Velocity_i[iDim] -= 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
+		Velocity_j[iDim] += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
+
+//		Velocity_i[iDim] -= GridVel_i[iDim];
+//		Velocity_j[iDim] += GridVel_j[iDim];
 	}
 
   }
@@ -1210,13 +1218,12 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   
   sq_vel_i = 0.0;
   for (iDim = 0; iDim < nDim; iDim++) {
-    Velocity_i[iDim]  = V_i[iDim+1];
-    sq_vel_i         += Velocity_i[iDim] * Velocity_i[iDim];
+    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
   }
 
   Pressure_i = fabs( V_i[nDim+1] );
   Density_i  = fabs( V_i[nDim+2] );
-  Enthalpy_i = fabs( V_i[nDim+3] );
+  Enthalpy_i = fabs( V_i[nDim+3] ) - 0.5 * (Vi2 - sq_vel_i);
   Energy_i   = Enthalpy_i - Pressure_i / Density_i;
 
   StaticEnergy_i   = Energy_i   - 0.5 * sq_vel_i;
@@ -1230,13 +1237,12 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   
   sq_vel_j = 0.0;
   for (iDim = 0; iDim < nDim; iDim++) {
-    Velocity_j[iDim]  = V_j[iDim+1];
-    sq_vel_j         += Velocity_j[iDim] * Velocity_j[iDim];
+    sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
   }
 
   Pressure_j = fabs( V_j[nDim+1] );
   Density_j  = fabs( V_j[nDim+2] );
-  Enthalpy_j = fabs( V_j[nDim+3] );
+  Enthalpy_j = fabs( V_j[nDim+3] ) - 0.5 * (Vj2 - sq_vel_j);
   Energy_j   = Enthalpy_j - Pressure_j / Density_j;
 
   StaticEnergy_j   = Energy_j   - 0.5 * sq_vel_j;
@@ -1274,6 +1280,7 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   RoeKappa = 0.5 * ( Kappa_i + Kappa_j );
   RoeChi   = 0.5 * ( Chi_i + Chi_j );
   RoeDensity = sqrt( Density_i * Density_j );
+  RoeEnthalpy = ( sqrt(Density_j) * Enthalpy_j + sqrt(Density_i) * Enthalpy_i)/(sqrt(Density_j) + sqrt(Density_i) );
 
   VinokurMontagne();
 
@@ -1731,15 +1738,6 @@ if (sM >= 0.0) {
 	}
 
   }
-
-if (grid_movement) {
-	for (iDim = 0; iDim < nDim; iDim++){
-		Velocity_i[iDim] += GridVel_i[iDim];
-		Velocity_j[iDim] += GridVel_j[iDim];
-	}
-
-  }
-
 }
 
 void CUpwGeneralHLLC_Flow::VinokurMontagne() {
