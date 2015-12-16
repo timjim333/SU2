@@ -1175,8 +1175,7 @@ CUpwGeneralHLLC_Flow::~CUpwGeneralHLLC_Flow(void) {
 }
 
 void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **val_Jacobian_i, su2double **val_Jacobian_j, CConfig *config) {
-  //su2double old_velocity_i[3], old_velocity_j[3]
-
+su2double AbsoluteVel2_i, AbsoluteVel2_j;
   /*--- Face area (norm or the normal vector) ---*/
   
   Area = 0.0;
@@ -1190,66 +1189,67 @@ void CUpwGeneralHLLC_Flow::ComputeResidual(su2double *val_residual, su2double **
   for (iDim = 0; iDim < nDim; iDim++)
     UnitNormal[iDim] = Normal[iDim] / Area;
 
+  sq_vel_i = 0.0;
+  sq_vel_j = 0.0;
+
   for (iDim = 0; iDim < nDim; iDim++) {
     Velocity_i[iDim]  = V_i[iDim+1];
     Velocity_j[iDim]  = V_j[iDim+1];
-  }
-
-  /*--- Projected Grid Velocity ---*/
-su2double Vi2=0,Vj2=0;
-  if (grid_movement) {
-	ProjVelocity = 0.0;
-	for (iDim = 0; iDim < nDim; iDim++){
-		ProjVelocity += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] ) * Normal[iDim];
-
-Vi2 += Velocity_i[iDim]*Velocity_i[iDim];
-Vj2 += Velocity_j[iDim]*Velocity_j[iDim];
-
-		Velocity_i[iDim] -= 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
-		Velocity_j[iDim] += 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
-
-//		Velocity_i[iDim] -= GridVel_i[iDim];
-//		Velocity_j[iDim] += GridVel_j[iDim];
-	}
-
-  }
-  
-  /*--- Primitive variables at point i ---*/
-  
-  sq_vel_i = 0.0;
-  for (iDim = 0; iDim < nDim; iDim++) {
-    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
-  }
-
-  Pressure_i = fabs( V_i[nDim+1] );
-  Density_i  = fabs( V_i[nDim+2] );
-  Enthalpy_i = fabs( V_i[nDim+3] ) - 0.5 * (Vi2 - sq_vel_i);
-  Energy_i   = Enthalpy_i - Pressure_i / Density_i;
-
-  StaticEnergy_i   = Energy_i   - 0.5 * sq_vel_i;
-  StaticEnthalpy_i = Enthalpy_i - 0.5 * sq_vel_i;
-  
-  Kappa_i = S_i[1] / Density_i;
-  Chi_i   = S_i[0] - Kappa_i * StaticEnergy_i;
-  SoundSpeed_i = sqrt(Chi_i + StaticEnthalpy_i * Kappa_i);
     
-  /*--- Primitive variables at point j ---*/
-  
-  sq_vel_j = 0.0;
-  for (iDim = 0; iDim < nDim; iDim++) {
+    sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
     sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
   }
 
+  /*--- Primitive variables at point i ---*/
+
+  Pressure_i = fabs( V_i[nDim+1] );
+  Density_i  = fabs( V_i[nDim+2] );
+  Enthalpy_i = fabs( V_i[nDim+3] );
+
+  /*--- Primitive variables at point j ---*/
+  
   Pressure_j = fabs( V_j[nDim+1] );
   Density_j  = fabs( V_j[nDim+2] );
-  Enthalpy_j = fabs( V_j[nDim+3] ) - 0.5 * (Vj2 - sq_vel_j);
-  Energy_j   = Enthalpy_j - Pressure_j / Density_j;
+  Enthalpy_j = fabs( V_j[nDim+3] );
 
+
+  /*--- Projected Grid Velocity ---*/
+
+  if (grid_movement) {
+
+	AbsoluteVel2_i = sq_vel_i;
+	AbsoluteVel2_j = sq_vel_j;
+
+	sq_vel_i = 0;
+	sq_vel_j = 0;
+
+	for (iDim = 0; iDim < nDim; iDim++){
+		Velocity_i[iDim] -= 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
+		Velocity_j[iDim] -= 0.5 * ( GridVel_i[iDim] + GridVel_j[iDim] );
+
+		sq_vel_i += Velocity_i[iDim] * Velocity_i[iDim];
+		sq_vel_j += Velocity_j[iDim] * Velocity_j[iDim];
+	}
+
+	Enthalpy_i += 0.5 * (sq_vel_i - AbsoluteVel2_i);
+	Enthalpy_j += 0.5 * (sq_vel_j - AbsoluteVel2_j);
+  }  
+
+  Energy_i         = Enthalpy_i - Pressure_i / Density_i;
+  StaticEnergy_i   = Energy_i   - 0.5 * sq_vel_i;
+  StaticEnthalpy_i = Enthalpy_i - 0.5 * sq_vel_i;
+  
+  Kappa_i = Gamma-1;//S_i[1] / Density_i;
+  Chi_i   = 0;//S_i[0] - Kappa_i * StaticEnergy_i;
+  SoundSpeed_i = sqrt(Chi_i + StaticEnthalpy_i * Kappa_i);
+  
+
+  Energy_j         = Enthalpy_j - Pressure_j / Density_j;
   StaticEnergy_j   = Energy_j   - 0.5 * sq_vel_j;
   StaticEnthalpy_j = Enthalpy_j - 0.5 * sq_vel_j;
 
-  Kappa_j = S_j[1] / Density_j;
-  Chi_j   = S_j[0] - Kappa_j * StaticEnergy_j;
+  Kappa_j = Gamma-1;//S_j[1] / Density_j;
+  Chi_j   = 0;//S_j[0] - Kappa_j * StaticEnergy_j;
   SoundSpeed_j = sqrt(Chi_j + StaticEnthalpy_j * Kappa_j);
    
   /*--- Projected velocities ---*/
@@ -1297,11 +1297,11 @@ Vj2 += Velocity_j[iDim]*Velocity_j[iDim];
   /*--- speed of contact surface ---*/
 
   RHO = Density_j * (sR - ProjVelocity_j) - Density_i * (sL - ProjVelocity_i);
-  sM = ( Pressure_i-Pressure_j - Density_i*ProjVelocity_i*(sL-ProjVelocity_i) + Density_j*ProjVelocity_j*(sR-ProjVelocity_j)) / RHO;
+  sM = ( Pressure_i - Pressure_j - Density_i * ProjVelocity_i * ( sL - ProjVelocity_i ) + Density_j * ProjVelocity_j * ( sR - ProjVelocity_j ) ) / RHO;
   
   /*--- Pressure at right and left (Pressure_j=Pressure_i) side of contact surface ---*/
   
-  pStar = Density_j * (ProjVelocity_j-sR)*(ProjVelocity_j-sM) + Pressure_j;
+  pStar = Density_j * ( ProjVelocity_j - sR ) * ( ProjVelocity_j - sM ) + Pressure_j;
 
 
 if (sM >= 0.0) {
@@ -1315,7 +1315,7 @@ if (sM >= 0.0) {
 
 	val_residual[nVar-1] = ( Energy_i * Density_i + Pressure_i ) * ProjVelocity_i;
 
-	if (sL <= 0){
+	if (sL <= 0.0){
 
 		/*--- If Left Star State then compute Flux Left Star from Flux Left ---*/
 
@@ -1324,7 +1324,7 @@ if (sM >= 0.0) {
 		IntermediateState[0] = rhoSL * Density_i;
 
 		for (iDim = 0; iDim < nDim; iDim++)
-			IntermediateState[iDim+1] = rhoSL * ( Density_i * Velocity_i[iDim] + ( pStar -Pressure_i ) / ( sL-ProjVelocity_i ) * UnitNormal[iDim] ) ;
+			IntermediateState[iDim+1] = rhoSL * ( Density_i * Velocity_i[iDim] + ( pStar - Pressure_i ) / ( sL - ProjVelocity_i ) * UnitNormal[iDim] ) ;
 
 		IntermediateState[nVar-1] = rhoSL * ( Density_i * Energy_i - ( Pressure_i * ProjVelocity_i - pStar * sM) / ( sL - ProjVelocity_i ) );
 
@@ -1348,7 +1348,7 @@ if (sM >= 0.0) {
 
 	val_residual[nVar-1] = ( Energy_j * Density_j + Pressure_j ) * ProjVelocity_j;
 
-	if (sR >= 0){
+	if (sR >= 0.0){
 
 		/*--- If Right Star State then compute Flux Right Star from Flux Right ---*/
 
@@ -1405,7 +1405,7 @@ if (sM >= 0.0) {
 
 			/*--- Computing pressure derivatives d/dU_L (PI) ---*/
 
-			dPI_dU[0] = Chi_i - Kappa_i / Density_i * ( Energy_i - 0.5 * sq_vel_i );
+			dPI_dU[0] = Chi_i - Kappa_i / Density_i * StaticEnergy_i;
 
 			for (iDim = 0; iDim < nDim; iDim++)			
 				dPI_dU[iDim+1] = - Kappa_i / Density_i * Velocity_i[iDim];
@@ -1498,7 +1498,7 @@ if (sM >= 0.0) {
 			
 			/*--- Computing pressure derivatives d/dU_R (PI) ---*/
 
-			dPI_dU[0] =   Chi_j - Kappa_j / Density_j * ( Energy_j - 0.5 * sq_vel_j );
+			dPI_dU[0] =   Chi_j - Kappa_j / Density_j * StaticEnergy_j;
 			for (iDim = 0; iDim < nDim; iDim++)			
 				dPI_dU[iDim+1] = - Kappa_j / Density_j * Velocity_j[iDim];
 
@@ -1554,7 +1554,7 @@ if (sM >= 0.0) {
 		}
 	}
 	else {
-		if (sR < 0){
+		if (sR < 0.0){
 
 			/*--- Compute Jacobian based on Right State ---*/
 	
@@ -1579,7 +1579,7 @@ if (sM >= 0.0) {
 
 			/*--- Computing pressure derivatives d/dU_L (PI) ---*/
 
-			dPI_dU[0] = Chi_i - Kappa_i / Density_i * ( Energy_i - 0.5 * sq_vel_i );
+			dPI_dU[0] = Chi_i - Kappa_i / Density_i * StaticEnergy_i;
 
 			for (iDim = 0; iDim < nDim; iDim++)			
 				dPI_dU[iDim+1] = - Kappa_i / Density_i * Velocity_i[iDim];
@@ -1643,7 +1643,7 @@ if (sM >= 0.0) {
 			
 			/*--- Computing pressure derivatives d/dU_R (PI) ---*/
 
-			dPI_dU[0] = Chi_j - Kappa_j / Density_j * ( Energy_j - 0.5 * sq_vel_j );
+			dPI_dU[0] = Chi_j - Kappa_j / Density_j * StaticEnergy_j;
 			for (iDim = 0; iDim < nDim; iDim++)			
 				dPI_dU[iDim+1] = - Kappa_j / Density_j * Velocity_j[iDim];
 
