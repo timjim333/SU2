@@ -1214,7 +1214,7 @@ su2double AbsoluteVel2_i, AbsoluteVel2_j;
 
 
   /*--- Projected Grid Velocity ---*/
-
+/*
   if (grid_movement) {
 
 	AbsoluteVel2_i = sq_vel_i;
@@ -1234,13 +1234,13 @@ su2double AbsoluteVel2_i, AbsoluteVel2_j;
 	Enthalpy_i += 0.5 * (sq_vel_i - AbsoluteVel2_i);
 	Enthalpy_j += 0.5 * (sq_vel_j - AbsoluteVel2_j);
   }  
-
+*/
   Energy_i         = Enthalpy_i - Pressure_i / Density_i;
   StaticEnergy_i   = Energy_i   - 0.5 * sq_vel_i;
   StaticEnthalpy_i = Enthalpy_i - 0.5 * sq_vel_i;
   
-  Kappa_i = Gamma-1;//S_i[1] / Density_i;
-  Chi_i   = 0;//S_i[0] - Kappa_i * StaticEnergy_i;
+  Kappa_i = S_i[1] / Density_i;
+  Chi_i   = S_i[0] - Kappa_i * StaticEnergy_i;
   SoundSpeed_i = sqrt(Chi_i + StaticEnthalpy_i * Kappa_i);
   
 
@@ -1248,8 +1248,8 @@ su2double AbsoluteVel2_i, AbsoluteVel2_j;
   StaticEnergy_j   = Energy_j   - 0.5 * sq_vel_j;
   StaticEnthalpy_j = Enthalpy_j - 0.5 * sq_vel_j;
 
-  Kappa_j = Gamma-1;//S_j[1] / Density_j;
-  Chi_j   = 0;//S_j[0] - Kappa_j * StaticEnergy_j;
+  Kappa_j = S_j[1] / Density_j;
+  Chi_j   = S_j[0] - Kappa_j * StaticEnergy_j;
   SoundSpeed_j = sqrt(Chi_j + StaticEnthalpy_j * Kappa_j);
    
   /*--- Projected velocities ---*/
