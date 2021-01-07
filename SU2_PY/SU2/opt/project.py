@@ -3,24 +3,20 @@
 ## \file project.py
 #  \brief package for optimization projects
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -28,6 +24,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
+
+# make print(*args) function available in PY2.6+, does'nt work on PY < 2.6
+from __future__ import print_function
 
 # -------------------------------------------------------------------
 #  Imports
@@ -39,7 +38,7 @@ from .. import io   as su2io
 from .. import eval as su2eval
 from .. import util as su2util
 from ..io import redirect_folder
-
+from ..io import historyOutFields
 from warnings import warn, simplefilter
 #simplefilter(Warning,'ignore')
 
@@ -104,11 +103,33 @@ class Project(object):
         if '*' in folder: folder = su2io.next_folder(folder)        
         if designs is None: designs = []
         
-        print 'New Project: %s' % (folder)
+        print('New Project: %s' % (folder))
         
         # setup config
         config = copy.deepcopy(config)
         
+        # data_dict creation does not preserve the ordering of the config file.
+        # This section ensures that the order of markers and objectives match 
+        # It is only needed when more than one objective is used.
+        def_objs = config['OPT_OBJECTIVE']
+        if len(def_objs)>1:
+            objectives = def_objs.keys()
+            marker_monitoring = []
+            weights = []
+            for i_obj, this_obj in enumerate(objectives):
+                marker_monitoring+=[def_objs[this_obj]['MARKER']]
+                weights+=[str(def_objs[this_obj]['SCALE'])]
+            config['MARKER_MONITORING'] = marker_monitoring
+            config['OBJECTIVE_WEIGHT'] = ",".join(weights)
+            config['OBJECTIVE_FUNCTION'] = ",".join(objectives)
+        
+        for this_obj in def_objs:
+            if this_obj in su2io.optnames_multi:
+                this_obj = this_obj.split('_')[1]
+            group = historyOutFields[this_obj]['GROUP']
+            if not group in config.HISTORY_OUTPUT:
+                config.HISTORY_OUTPUT.append(group)
+
         # setup state
         if state is None:
             state = su2io.State()
@@ -116,10 +137,9 @@ class Project(object):
             state  = copy.deepcopy(state)
             state  = su2io.State(state)
         state.find_files(config)
-        if config.OBJECTIVE_FUNCTION == 'OUTFLOW_GENERALIZED':
-            state.FILES['DownstreamFunction'] = 'downstream_function.py'
+
         if 'MESH' not in state.FILES:
-            raise Exception , 'Could not find mesh file: %s' % config.MESH_FILENAME
+            raise Exception('Could not find mesh file: %s' % config.MESH_FILENAME)
         
         self.config  = config      # base config
         self.state   = state       # base state
@@ -127,13 +147,14 @@ class Project(object):
         self.designs = designs     # design list
         self.folder  = folder      # project folder
         self.results = su2util.ordered_bunch() # project design results
-        
+
         # output filenames
-        self.filename = 'project.pkl' 
-        self.results_filename = 'results.pkl' 
-        
+        self.filename = 'project.pkl'
+        self.results_filename = 'results.pkl'
+
         # initialize folder with files
         pull,link = state.pullnlink(config)
+
         with redirect_folder(folder,pull,link,force=True):
         
             # look for existing designs
@@ -159,31 +180,34 @@ class Project(object):
         config = self.config           # project config
         state  = self.state            # project state
         folder = self.folder           # project folder
-        
         filename = self.filename
         
         # check folder
-        assert os.path.exists(folder) , 'cannot find project folder %s' % folder        
-        
+        assert os.path.exists(folder) , 'cannot find project folder %s' % folder
+
         # list project files to pull and link
         pull,link = state.pullnlink(config)
-        
+
         # project folder redirection, don't overwrite files
-        with redirect_folder(folder,pull,link,force=False) as push:        
-        
+        with redirect_folder(folder,pull,link,force=False) as push:
+
             # start design
             design = self.new_design(konfig)
             
             if config.get('CONSOLE','VERBOSE') == 'VERBOSE':
-                print os.path.join(self.folder,design.folder)
+                print(os.path.join(self.folder,design.folder))
             timestamp = design.state.tic()
-            
+
+            # set right option in design config.
+            if konfig.get('TIME_DOMAIN', 'NO') == 'YES' and konfig.get('RESTART_SOL', 'NO') == 'YES':
+                design.config['RESTART_SOL'] = 'YES'
+
             # run design+
             vals = design._eval(func,*args)
-            
+
             # check for update
             if design.state.toc(timestamp):
-                
+
                 # recompile design results
                 self.compile_results()
                 
@@ -216,7 +240,7 @@ class Project(object):
         func = su2eval.obj_df
         konfig,dvs = self.unpack_dvs(dvs)
         return self._eval(konfig, func,dvs)
-    
+
     def con_ceq(self,dvs):
         func = su2eval.con_ceq
         konfig,dvs = self.unpack_dvs(dvs)
@@ -264,7 +288,6 @@ class Project(object):
         """
          # local konfig
         konfig = copy.deepcopy(config)
-        
         # find closest design
         closest,delta = self.closest_design(konfig)
         # found existing design
@@ -273,8 +296,7 @@ class Project(object):
         # start new design
         else:
             design = self.init_design(konfig,closest)
-        #: if new design    
-        
+        #: if new design
         return design
     
     def get_design(self,config):
@@ -283,7 +305,7 @@ class Project(object):
         if delta == 0.0 and closest:
             design = closest
         else:
-            raise Exception, 'design not found for this config'
+            raise Exception('design not found for this config')
         return design
         
     def closest_design(self,config):
@@ -332,9 +354,15 @@ class Project(object):
                 if key == 'MESH': continue 
                 # build file path
                 name = seed_files[key]
-                name = os.path.join(seed_folder,name)
-                # update pull files
-                ztate.FILES[key] = name
+                if isinstance(name,list):
+                    built_name = []
+                    for elem in name:
+                        built_name.append(os.path.join(seed_folder,elem))
+                    ztate.FILES[key] = built_name
+                else:
+                    name = os.path.join(seed_folder,name)
+                    # update pull files
+                    ztate.FILES[key] = name
             
         # name new folder
         folder = self._design_folder.replace('*',self._design_number)
@@ -346,8 +374,14 @@ class Project(object):
         # update local state filenames ( ??? why not in Design() )
         for key in design.files:
             name = design.files[key]
-            name = os.path.split(name)[-1]
-            design.files[key] = name
+            if isinstance(name,list):
+                built_name = []
+                for elem in name:
+                    built_name.append(os.path.split(elem)[-1])
+                design.files[key] = built_name
+            else:
+                name = os.path.split(name)[-1]
+                design.files[key] = name
         
         # add design to project 
         self.designs.append(design)        
@@ -387,7 +421,7 @@ class Project(object):
             for key in design.state.GRADIENTS.keys():
                 results.GRADIENTS[key] = []
             for TYPE in design.state.HISTORY.keys():
-                if not results.HISTORY.has_key(TYPE):
+                if not TYPE in results.HISTORY:
                     results.HISTORY[TYPE] = su2util.ordered_bunch()
                 for key in design.state.HISTORY[TYPE].keys():
                     results.HISTORY[TYPE][key] = []
@@ -406,13 +440,13 @@ class Project(object):
             this_designvector = design.state.design_vector()
             results.VARIABLES.append( this_designvector )
             for key in results.FUNCTIONS.keys():
-                if design.state.FUNCTIONS.has_key(key):
+                if key in design.state.FUNCTIONS:
                     new_func = design.state.FUNCTIONS[key]
                 else:
                     new_func = default
                 results.FUNCTIONS[key].append(new_func)
             for key in results.GRADIENTS.keys():
-                if design.state.GRADIENTS.has_key(key):
+                if key in design.state.GRADIENTS:
                     new_grad = design.state.GRADIENTS[key]
                 else:
                     new_grad = [default] * len( this_designvector )
@@ -457,7 +491,7 @@ class Project(object):
     def plot_results(self):
         """ writes a tecplot file for plotting design results
         """
-        output_format = self.config.OUTPUT_FORMAT
+        output_format = self.config.TABULAR_FORMAT
         functions     = self.results.FUNCTIONS
         history       = self.results.HISTORY
         
@@ -466,8 +500,10 @@ class Project(object):
         results_plot.update(functions)
         results_plot.update(history.get('DIRECT',{}))
         
-        su2util.write_plot('history_project.dat',output_format,results_plot)
-        
+        if (output_format == 'CSV'):
+          su2util.write_plot('history_project.csv',output_format,results_plot)
+        else:
+          su2util.write_plot('history_project.dat',output_format,results_plot)
         
     def save(self):
         with su2io.redirect_folder(self.folder):

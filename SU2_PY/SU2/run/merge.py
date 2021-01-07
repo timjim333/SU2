@@ -1,22 +1,27 @@
 ## \file merge.py
 #  \brief python package for merging meshes
 #  \author T. Economon, T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# Copyright (C) 2012-2015 SU2 Developers.
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
-# This program is distributed in the hope that it will be useful,
+# SU2 is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# 
+# SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Lesser General Public
+# License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
 # ----------------------------------------------------------------------
 #  Imports
@@ -24,7 +29,8 @@
 
 import os, sys, shutil, copy
 from .. import io  as su2io
-from interface import SOL as SU2_SOL
+from .interface import SOL as SU2_SOL
+from .interface import SOL_FSI as SU2_SOL_FSI
 
 # ----------------------------------------------------------------------
 #  Merge Mesh
@@ -61,12 +67,18 @@ def merge( config ):
     
     # special cases
     special_cases = su2io.get_specialCases(konfig)
+
+    # special cases
+    multizone_cases = su2io.get_multizone(konfig)
     
     # # MERGING # #
-    if 'WRT_UNSTEADY' in special_cases:
-        merge_unsteady(konfig)
+    if 'FLUID_STRUCTURE_INTERACTION' in multizone_cases:
+        merge_multizone(konfig)
     else:
-        merge_solution(konfig)
+        if 'WRT_UNSTEADY' in special_cases:
+            merge_unsteady(konfig)
+        else:
+            merge_solution(konfig)
         
     # info out (empty)
     info = su2io.State()
@@ -93,6 +105,17 @@ def merge_solution( config ):
     """
     
     SU2_SOL( config )
+    
+    return
+
+#: merge_solution( config )
+
+def merge_multizone( config, begintime=0, endtime=None ):
+
+    if not endtime:
+        endtime = config.TIME_ITER
+    
+    SU2_SOL_FSI( config )
     
     return
 

@@ -3,18 +3,14 @@
  * \brief Headers of the main subroutines of the code SU2_GEO.
  *        The subroutines and functions are in the <i>SU2_GEO.cpp</i> file.
  * \author F. Palacios, T. Economon
- * \version 4.1.0 "Cardinal"
+ * \version 7.0.8 "Blackbird"
  *
- * SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
- *                      Dr. Thomas D. Economon (economon@stanford.edu).
+ * SU2 Project Website: https://su2code.github.io
  *
- * SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
- *                 Prof. Piero Colonna's group at Delft University of Technology.
- *                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
- *                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
- *                 Prof. Rafael Palacios' group at Imperial College London.
+ * The SU2 Project is maintained by the SU2 Foundation 
+ * (http://su2foundation.org)
  *
- * Copyright (C) 2012-2015 SU2, the open-source CFD code.
+ * Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
  *
  * SU2 is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,6 +26,7 @@
  * License along with SU2. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
 #pragma once
 
 #include "../../Common/include/mpi_structure.hpp"
@@ -39,8 +36,9 @@
 #include <iomanip>
 #include <cmath>
 
-#include "../../Common/include/geometry_structure.hpp"
-#include "../../Common/include/config_structure.hpp"
-#include "../../Common/include/grid_movement_structure.hpp"
+#include "../../Common/include/geometry/CPhysicalGeometry.hpp"
+#include "../../Common/include/CConfig.hpp"
+#include "../../../Common/include/grid_movement/CSurfaceMovement.hpp"
+#include "../../../Common/include/grid_movement/CFreeFormDefBox.hpp"
 
 using namespace std;

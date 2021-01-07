@@ -3,24 +3,20 @@
 ## \file interface.py
 #  \brief python package interfacing with the SU2 suite
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -44,21 +40,22 @@ from ..util import which
 
 SU2_RUN = os.environ['SU2_RUN'] 
 sys.path.append( SU2_RUN )
+quote = '"' if sys.platform == 'win32' else ''
 
 # SU2 suite run command template
-base_Command = os.path.join(SU2_RUN,'%s')
+base_Command = os.path.join(SU2_RUN, '%s')
 
 # check for slurm
-slurm_job = os.environ.has_key('SLURM_JOBID')
+slurm_job = 'SLURM_JOBID' in os.environ
 
-#check for tacc
-tacc_job = os.environ.has_key('TACC_PUBLIC_MACHINE')
+# Check for custom mpi command
+user_defined = 'SU2_MPI_COMMAND' in os.environ
 
 # set mpi command
-if slurm_job:
+if user_defined:
+    mpi_Command = os.environ['SU2_MPI_COMMAND']
+elif slurm_job:
     mpi_Command = 'srun -n %i %s'
-    if tacc_job:
-        mpi_Command = 'ibrun -o 0 -n %i %s'
 elif not which('mpirun') is None:
     mpi_Command = 'mpirun -n %i %s'
 elif not which('mpiexec') is None:
@@ -84,7 +81,7 @@ def CFD(config):
     
     direct_diff = not konfig.get('DIRECT_DIFF',"") in ["NONE", ""]
 
-    discrete_adjoint = konfig.MATH_PROBLEM == 'DISCRETE_ADJOINT'
+    auto_diff = konfig.MATH_PROBLEM == 'DISCRETE_ADJOINT'
 
     if direct_diff:
         tempname = 'config_CFD_DIRECTDIFF.cfg'
@@ -93,15 +90,15 @@ def CFD(config):
 
         processes = konfig['NUMBER_PART']
 
-        the_Command = 'SU2_CFD_AD ' + tempname
+        the_Command = 'SU2_CFD_DIRECTDIFF%s %s' % (quote, tempname)
 
-    elif discrete_adjoint:
+    elif auto_diff:
         tempname = 'config_CFD_AD.cfg'
         konfig.dump(tempname)
 
         processes = konfig['NUMBER_PART']
 
-        the_Command = 'SU2_CFD_AD ' + tempname
+        the_Command = 'SU2_CFD_AD%s %s' % (quote, tempname)
 
     else:
         tempname = 'config_CFD.cfg'
@@ -109,9 +106,9 @@ def CFD(config):
     
         processes = konfig['NUMBER_PART']
     
-        the_Command = 'SU2_CFD ' + tempname
+        the_Command = 'SU2_CFD%s %s' % (quote, tempname)
 
-    the_Command = build_command( the_Command , processes )
+    the_Command = build_command( the_Command, processes )
     run_command( the_Command )
     
     #os.remove(tempname)
@@ -132,7 +129,7 @@ def MSH(config):
     processes = konfig['NUMBER_PART']
     processes = min([1,processes])    
     
-    the_Command = 'SU2_MSH ' + tempname
+    the_Command = 'SU2_MSH%s %s' % (quote, tempname)
     the_Command = build_command( the_Command , processes )
     run_command( the_Command )
     
@@ -153,8 +150,8 @@ def DEF(config):
     # must run with rank 1
     processes = konfig['NUMBER_PART']
     
-    the_Command = 'SU2_DEF ' + tempname
-    the_Command = build_command( the_Command , processes )
+    the_Command = 'SU2_DEF%s %s' % (quote, tempname)
+    the_Command = build_command( the_Command, processes )
     run_command( the_Command )
     
     #os.remove(tempname)
@@ -167,16 +164,16 @@ def DOT(config):
     """    
     konfig = copy.deepcopy(config)
 
-    discrete_adjoint = konfig.MATH_PROBLEM == 'DISCRETE_ADJOINT'
+    auto_diff = konfig.MATH_PROBLEM == 'DISCRETE_ADJOINT' or konfig.get('AUTO_DIFF','NO') == 'YES'
 
-    if discrete_adjoint:
+    if auto_diff:
 
         tempname = 'config_DOT_AD.cfg'
         konfig.dump(tempname)
 
         processes = konfig['NUMBER_PART']
 
-        the_Command = 'SU2_DOT_AD ' + tempname
+        the_Command = 'SU2_DOT_AD%s %s' % (quote, tempname)
     else:
     
         tempname = 'config_DOT.cfg'
@@ -184,9 +181,9 @@ def DOT(config):
     
         processes = konfig['NUMBER_PART']
     
-        the_Command = 'SU2_DOT ' + tempname
+        the_Command = 'SU2_DOT%s %s' % (quote, tempname)
 
-    the_Command = build_command( the_Command , processes )
+    the_Command = build_command( the_Command, processes )
     run_command( the_Command )
     
     #os.remove(tempname)
@@ -206,7 +203,7 @@ def GEO(config):
     # must run with rank 1
     processes = konfig['NUMBER_PART']
         
-    the_Command = 'SU2_GEO ' + tempname
+    the_Command = 'SU2_GEO%s %s' % (quote, tempname)
     the_Command = build_command( the_Command , processes )
     run_command( the_Command )
     
@@ -227,7 +224,7 @@ def SOL(config):
     # must run with rank 1
     processes = konfig['NUMBER_PART']
     
-    the_Command = 'SU2_SOL ' + tempname
+    the_Command = 'SU2_SOL%s %s' % (quote, tempname)
     the_Command = build_command( the_Command , processes )
     run_command( the_Command )
     
@@ -235,16 +232,38 @@ def SOL(config):
     
     return
 
+def SOL_FSI(config):
+    """ run SU2_SOL for FSI problems
+      partitions set by config.NUMBER_PART
+    """
+  
+    konfig = copy.deepcopy(config)
+    
+    tempname = 'config_SOL.cfg'
+    konfig.dump(tempname)
+  
+    # must run with rank 1
+    processes = konfig['NUMBER_PART']
+    
+    the_Command = 'SU2_SOL%s %s 2' % (quote, tempname)
+    the_Command = build_command( the_Command , processes )
+    run_command( the_Command )
+    
+    #os.remove(tempname)
+    
+    return
+
+
 # ------------------------------------------------------------
 #  Helper functions
 # ------------------------------------------------------------
 
 def build_command( the_Command , processes=0 ):
     """ builds an mpi command for given number of processes """
-    the_Command = base_Command % the_Command
+    the_Command = quote + (base_Command % the_Command)
     if processes > 1:
         if not mpi_Command:
-            raise RuntimeError , 'could not find an mpi interface'
+            raise RuntimeError('could not find an mpi interface')
         the_Command = mpi_Command % (processes,the_Command)
     return the_Command
 
@@ -259,18 +278,18 @@ def run_command( Command ):
                              stdout=sys.stdout      , 
                              stderr=subprocess.PIPE  )
     return_code = proc.wait()
-    message = proc.stderr.read()
+    message = proc.stderr.read().decode()
     
     if return_code < 0:
         message = "SU2 process was terminated by signal '%s'\n%s" % (-return_code,message)
-        raise SystemExit , message
+        raise SystemExit(message)
     elif return_code > 0:
         message = "Path = %s\nCommand = %s\nSU2 process returned error '%s'\n%s" % (os.path.abspath(','),Command,return_code,message)
         if return_code in return_code_map.keys():
             exception = return_code_map[return_code]
         else:
             exception = RuntimeError
-        raise exception , message
+        raise exception(message)
     else:
         sys.stdout.write(message)
             

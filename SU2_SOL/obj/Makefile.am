@@ -3,18 +3,24 @@
 # \file Makefile.am
 # \brief Makefile for SU2_SOL
 # \author M. Colonno, T. Economon, F. Palacios
-# \version 4.1.0 "Cardinal"
+# \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# The current SU2 release has been coordinated by the
+# SU2 International Developers Society <www.su2devsociety.org>
+# with selected contributions from the open-source community.
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
+# The main research teams contributing to the current release are:
+#  - Prof. Juan J. Alonso's group at Stanford University.
+#  - Prof. Piero Colonna's group at Delft University of Technology.
+#  - Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
+#  - Prof. Alberto Guardone's group at Polytechnic University of Milan.
+#  - Prof. Rafael Palacios' group at Imperial College London.
+#  - Prof. Vincent Terrapon's group at the University of Liege.
+#  - Prof. Edwin van der Weide's group at the University of Twente.
+#  - Lab. of New Concepts in Aeronautics at Tech. Institute of Aeronautics.
 #
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, Francisco D. Palacios, Thomas D. Economon,
+#                      Tim Albring, and the SU2 contributors.
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -31,58 +37,26 @@
 #
 ################################################################################
 
+AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS}
 
 bin_PROGRAMS = ../bin/SU2_SOL
 
 ___bin_SU2_SOL_SOURCES = \
   ../include/SU2_SOL.hpp \
-  ../src/SU2_SOL.cpp \
-  ../../SU2_CFD/include/output_structure.hpp \
-  ../../SU2_CFD/src/output_structure.cpp \
-  ../../SU2_CFD/src/output_cgns.cpp \
-  ../../SU2_CFD/src/output_tecplot.cpp \
-  ../../SU2_CFD/src/output_fieldview.cpp \
-  ../../SU2_CFD/src/output_su2.cpp \
-  ../../SU2_CFD/src/output_paraview.cpp \
-  ../../SU2_CFD/include/solver_structure.hpp \
-  ../../SU2_CFD/src/solver_structure.cpp \
-  ../../SU2_CFD/include/variable_structure.hpp \
-  ../../SU2_CFD/src/variable_structure.cpp
+  ../src/SU2_SOL.cpp
 
 ___bin_SU2_SOL_CXXFLAGS =
-___bin_SU2_SOL_LDADD = ../../Common/lib/libSU2.a
+___bin_SU2_SOL_LDADD = \
+  ../../SU2_CFD/obj/libSU2Core.a \
+  ../../Common/lib/libSU2.a
 
 # always link to built dependencies from ./externals
 ___bin_SU2_SOL_CXXFLAGS += @su2_externals_INCLUDES@
 ___bin_SU2_SOL_LDADD += @su2_externals_LIBS@
-
-# if BUILD_CGNS
-___bin_SU2_SOL_CXXFLAGS += @CGNS_CXX@
-___bin_SU2_SOL_LDADD += @CGNS_LD@
-# endif
-
-# if BUILD_HDF5
-___bin_SU2_SOL_CXXFLAGS += @HDF5_CXX@
-___bin_SU2_SOL_LDADD += @HDF5_LD@
-# endif
-
-# if BUILD_SZIP
-___bin_SU2_SOL_CXXFLAGS += @SZIP_CXX@
-___bin_SU2_SOL_LDADD += @SZIP_LD@
-# endif
-
-# if BUILD_ZLIB
-___bin_SU2_SOL_CXXFLAGS += @ZLIB_CXX@
-___bin_SU2_SOL_LDADD += @ZLIB_LD@
-# endif
+___bin_SU2_SOL_LDADD += @su2_externals_LIBPTHREAD@
 
 # if BUILD_MUTATIONPP
 ___bin_SU2_SOL_CXXFLAGS += @MUTATIONPP_CXX@
 ___bin_SU2_SOL_LDADD += @MUTATIONPP_LD@
-# endif
-
-# if BUILD_JSONCPP
-___bin_SU2_SOL_CXXFLAGS += @JSONCPP_CXX@
-___bin_SU2_SOL_LDADD += @JSONCPP_LD@
 # endif

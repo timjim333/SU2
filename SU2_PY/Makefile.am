@@ -3,18 +3,24 @@
 # \file Makefile.am
 # \brief Makefile for the SU2 Python framework
 # \author M. Colonno, T. Economon, F. Palacios, T. Lukaczyk
-# \version 4.1.0 "Cardinal"
+# \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# The current SU2 release has been coordinated by the
+# SU2 International Developers Society <www.su2devsociety.org>
+# with selected contributions from the open-source community.
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
+# The main research teams contributing to the current release are:
+#  - Prof. Juan J. Alonso's group at Stanford University.
+#  - Prof. Piero Colonna's group at Delft University of Technology.
+#  - Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
+#  - Prof. Alberto Guardone's group at Polytechnic University of Milan.
+#  - Prof. Rafael Palacios' group at Imperial College London.
+#  - Prof. Vincent Terrapon's group at the University of Liege.
+#  - Prof. Edwin van der Weide's group at the University of Twente.
+#  - Lab. of New Concepts in Aeronautics at Tech. Institute of Aeronautics.
 #
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, Francisco D. Palacios, Thomas D. Economon,
+#                      Tim Albring, and the SU2 contributors.
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -33,17 +39,21 @@
 
 bin_SCRIPTS = \
     continuous_adjoint.py \
+    compute_uncertainty.py \
     finite_differences.py \
     mesh_deformation.py \
     parallel_computation.py \
+    parallel_computation_fsi.py \
     package_tests.py \
-    patient_designspace.py \
     shape_optimization.py \
     merge_solution.py \
     set_ffd_design_var.py \
     compute_polar.py \
+    compute_multipoint.py \
     discrete_adjoint.py \
-    direct_differentiation.py
+    direct_differentiation.py \
+    fsi_computation.py \
+    SU2_CFD.py
 
 
 mypkgdir = $(prefix)/bin
@@ -60,13 +70,13 @@ nobase_dist_mypkg_DATA= \
     SU2/io/redirect.py \
     SU2/io/state.py \
     SU2/io/tools.py \
+    SU2/io/historyMap.py \
     SU2/io/__init__.py \
     SU2/mesh/adapt.py \
     SU2/mesh/tools.py \
     SU2/mesh/__init__.py \
     SU2/opt/project.py \
     SU2/opt/scipy_tools.py \
-    SU2/opt/server.py \
     SU2/opt/__init__.py \
     SU2/run/adaptation.py \
     SU2/run/adjoint.py \
@@ -85,9 +95,16 @@ nobase_dist_mypkg_DATA= \
     SU2/util/ordered_bunch.py \
     SU2/util/ordered_dict.py \
     SU2/util/plot.py \
-    SU2/util/pyCppTap.py \
+    SU2/util/polarSweepLib.py \
     SU2/util/switch.py \
     SU2/util/which.py \
-    SU2/util/__init__.py
+    SU2/util/__init__.py \
+    FSI/__init__.py \
+    FSI/FSIInterface.py \
+    FSI/PitchPlungeAirfoilStructuralTester.py \
+    FSI/io/__init__.py \
+    FSI/io/FSI_config.py \
+    FSI/util/__init__.py \
+    FSI/util/switch.py
 
 EXTRA_DIST = $(bin_SCRIPTS)

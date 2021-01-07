@@ -3,24 +3,20 @@
 ## \file filter_adjoint.py
 #  \brief Applies various filters to the adjoint surface sensitivities of an airfoil
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -29,12 +25,15 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import division, print_function, absolute_import
 
-import os, math
+import os
+import math
 from numpy import pi
 from optparse import OptionParser
 import numpy as np
-import libSU2, libSU2_mesh
+import libSU2
+import libSU2_mesh
 
 # plotting with matplotlib
 try:
@@ -95,7 +94,7 @@ def process_surface_adjoint( config_filename       ,
     # read config file
     config_data = libSU2.Get_ConfigParams(config_filename)
     surface_filename = config_data['SURFACE_ADJ_FILENAME'] + '.csv'
-    print surface_filename
+    print(surface_filename)
     mesh_filename    = config_data['MESH_FILENAME']
     gradient         = config_data['OBJECTIVE_FUNCTION']
     
@@ -182,7 +181,7 @@ def process_surface_adjoint( config_filename       ,
         Sens_smoother = smooth( S_clip, Sens_smooth, smth_len  , 'blackman' ) 
         Sens_filter = Sens_smooth + (Sens_smooth - Sens_smoother)             # sharpener
     else:
-        raise Exception, 'unknown filter type'
+        raise Exception('unknown filter type')
         
     # --------------------------------------------
     #  PLOTTING
@@ -285,8 +284,6 @@ def process_surface_adjoint( config_filename       ,
     print('----------------- Exit Success (Process Surface Adjoint) ----------------')
     print('')    
     
-    return
-
 #: def process_surface_adjoint()
 
 
@@ -475,10 +472,10 @@ def window(t,x,window_delta,window='hanning'):
     """
     
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
+        raise ValueError("smooth only accepts 1 dimension arrays.")
 
-    if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is not of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+    if window not in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
+        raise ValueError("Window is not of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'")
 
     # interpolate to constant time sample width
     min_dt = np.min( np.diff(t) )
@@ -517,6 +514,7 @@ def window(t,x,window_delta,window='hanning'):
 #  Run Main from Command Line
 # -----------------------------------------------------------------
 
-if __name__ == '__main__': main()
+if __name__ == '__main__':
+    main()
     
     

@@ -3,24 +3,20 @@
 ## \file geometry.py
 #  \brief python package for running geometry analyses
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -33,10 +29,10 @@
 #  Imports
 # ----------------------------------------------------------------------
 
-import os, sys, shutil, copy
+import copy
 
 from .. import io  as su2io
-from interface import GEO       as SU2_GEO
+from .interface import GEO       as SU2_GEO
 from ..util import ordered_bunch
 
 # ----------------------------------------------------------------------
@@ -73,9 +69,18 @@ def geometry ( config , step = 1e-3 ):
     
     # unpack
     function_name = konfig['GEO_PARAM']
-    func_filename = 'of_func.dat'
-    grad_filename = 'of_grad.dat'
-    
+    tabular_format = konfig.get('TABULAR_FORMAT', 'CSV')
+    func_filename  = konfig['VALUE_OBJFUNC_FILENAME']
+    grad_filename  = konfig['GRAD_OBJFUNC_FILENAME']
+
+    if tabular_format == 'CSV':
+        func_filename = func_filename.split('.')[0] + '.csv'
+        grad_filename = grad_filename.split('.')[0] + '.csv'
+    else:
+        func_filename = func_filename.split('.')[0] + '.dat'
+        grad_filename = grad_filename.split('.')[0] + '.dat'
+
+
     # choose dv values 
     Definition_DV = konfig['DEFINITION_DV']
     n_DV          = len(Definition_DV['KIND'])

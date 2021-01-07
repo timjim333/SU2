@@ -3,24 +3,20 @@
 ## \file adjoint.py
 #  \brief python package for running adjoint problems 
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -33,11 +29,11 @@
 #  Imports
 # ----------------------------------------------------------------------
 
-import os, sys, shutil, copy
+import copy
 
 from .. import io  as su2io
-from merge     import merge     as su2merge
-from interface import CFD       as SU2_CFD
+from .merge     import merge     as su2merge
+from .interface import CFD       as SU2_CFD
 
 # ----------------------------------------------------------------------
 #  Adjoint Simulation
@@ -78,7 +74,7 @@ def adjoint( config ):
         konfig['MATH_PROBLEM']  = 'CONTINUOUS_ADJOINT'
 
     konfig['CONV_FILENAME'] = konfig['CONV_FILENAME'] + '_adjoint'
-    
+
     # Run Solution
     SU2_CFD(konfig)
     
@@ -87,13 +83,13 @@ def adjoint( config ):
     su2merge(konfig)
     
     # filenames
-    plot_format      = konfig['OUTPUT_FORMAT']
+    plot_format      = konfig.get('TABULAR_FORMAT', 'CSV')
     plot_extension   = su2io.get_extension(plot_format)
     history_filename = konfig['CONV_FILENAME'] + plot_extension
     special_cases    = su2io.get_specialCases(konfig)
     
     # get history
-    history = su2io.read_history( history_filename )
+    history = su2io.read_history( history_filename, config.NZONES )
     
     # update super config
     config.update({ 'MATH_PROBLEM' : konfig['MATH_PROBLEM'] ,
@@ -101,9 +97,11 @@ def adjoint( config ):
     
     # files out
     objective    = konfig['OBJECTIVE_FUNCTION']
+    if "," in objective:
+            objective="COMBO"
     adj_title    = 'ADJOINT_' + objective
     suffix       = su2io.get_adjointSuffix(objective)
-    restart_name = konfig['RESTART_FLOW_FILENAME']
+    restart_name = konfig['RESTART_FILENAME']
     restart_name = su2io.add_suffix(restart_name,suffix)
     
     # info out
