@@ -3,18 +3,14 @@
  * \brief Headers of the main subroutines used by SU2_CFD.
  *        The subroutines and functions are in the <i>definition_structure.cpp</i> file.
  * \author F. Palacios, T. Economon
- * \version 4.1.0 "Cardinal"
+ * \version 7.0.8 "Blackbird"
  *
- * SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
- *                      Dr. Thomas D. Economon (economon@stanford.edu).
+ * SU2 Project Website: https://su2code.github.io
  *
- * SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
- *                 Prof. Piero Colonna's group at Delft University of Technology.
- *                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
- *                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
- *                 Prof. Rafael Palacios' group at Imperial College London.
+ * The SU2 Project is maintained by the SU2 Foundation
+ * (http://su2foundation.org)
  *
- * Copyright (C) 2012-2015 SU2, the open-source CFD code.
+ * Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
  *
  * SU2 is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,59 +30,22 @@
 
 #include "../../Common/include/mpi_structure.hpp"
 
-#include <ctime>
-
-#include "../../Common/include/gauss_structure.hpp"
-#include "../../Common/include/element_structure.hpp"
-#include "driver_structure.hpp"
-#include "iteration_structure.hpp"
-#include "solver_structure.hpp"
-#include "integration_structure.hpp"
-#include "output_structure.hpp"
-#include "numerics_structure.hpp"
-#include "../../Common/include/geometry_structure.hpp"
-#include "../../Common/include/config_structure.hpp"
+#include "../../Common/include/fem/fem_geometry_structure.hpp"
+#include "../../Common/include/geometry/CGeometry.hpp"
+#include "../../Common/include/CConfig.hpp"
 
 using namespace std;
 
-/*! 
- * \brief Gets the number of zones in the mesh file.
- * \param[in] val_mesh_filename - Name of the file with the grid information.
- * \param[in] val_format - Format of the file with the grid information.
- * \param[in] config - Definition of the particular problem.
- * \return Total number of zones in the grid file.
- */
-unsigned short GetnZone(string val_mesh_filename, unsigned short val_format, CConfig *config);
-
-/*! 
- * \brief Gets the number of dimensions in the mesh file
- * \param[in] val_mesh_filename - Name of the file with the grid information.
- * \param[in] val_format - Format of the file with the grid information.
- * \return Total number of domains in the grid file.
- */
-unsigned short GetnDim(string val_mesh_filename, unsigned short val_format);
-
 /*!
- * \brief Definition of the driver class for single and multi-zone problems.
- * \param[in] driver - Pointer to the driver object to be instantiated.
- * \param[in] config - Definition of the particular problem.
- * \param[in] nZone - Total number of zones in the problem.
- */
-void Driver_Preprocessing(CDriver **driver,
-    CIteration **iteration_container,
-    CSolver ****solver_container,
-    CGeometry ***geometry_container,
-    CIntegration ***integration_container,
-    CNumerics *****numerics_container,
-                          CConfig **config,
-                          unsigned short val_nZone);
-
-
-
-/*! 
- * \brief Do the geometrical preprocessing.
+ * \brief Performs an analysis of the mesh partitions for distributed memory calculations.
  * \param[in] geometry - Geometrical definition of the problem.
  * \param[in] config - Definition of the particular problem.
- * \param[in] val_nZone - Total number of zones.
  */
-void Geometrical_Preprocessing(CGeometry ***geometry, CConfig **config, unsigned short val_nZone);
+void Partition_Analysis(CGeometry *geometry, CConfig *config);
+
+/*!
+ * \brief Performs an analysis of the mesh partitions for distributed memory calculations for the FEM solver.
+ * \param[in] geometry - Geometrical definition of the problem.
+ * \param[in] config - Definition of the particular problem.
+ */
+void Partition_Analysis_FEM(CGeometry *geometry, CConfig *config);

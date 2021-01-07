@@ -3,24 +3,20 @@
 ## \file data.py
 #  \brief python package for data utility functions 
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -34,8 +30,15 @@
 # ----------------------------------------------------------------------
 
 import os, sys, shutil, copy
-import cPickle as pickle
-from filelock import filelock
+if sys.version_info[0] > 2:
+    # Py3 pickle now manage both accelerated cPickle and pure python pickle
+    # See https://docs.python.org/3/whatsnew/3.0.html#library-changes, 4th item.
+    import pickle
+else:
+    import cPickle as pickle
+
+
+from .filelock import filelock
 
 # -------------------------------------------------------------------
 #  Load a Dictionary of Data
@@ -71,7 +74,7 @@ def load_data( file_name, var_names=None   ,
         scipy_loaded = False    
         
     if not os.path.exists(file_name):
-        raise Exception , 'File does not exist: %s' % file_name
+        raise Exception('File does not exist: %s' % file_name)
     
     # process file format
     if file_format == 'infer':
@@ -91,7 +94,7 @@ def load_data( file_name, var_names=None   ,
                                            chars_as_strings = True      ,
                                            struct_as_record = True       )
             # pull core variable
-            assert input_data.has_key(core_name) , 'core data not found'
+            assert (core_name in input_data) , 'core data not found'
             input_data = input_data[core_name]
             
             # convert recarray to dictionary
@@ -101,7 +104,7 @@ def load_data( file_name, var_names=None   ,
         elif file_format == 'pickle':
             input_data = load_pickle(file_name)
             # pull core variable
-            assert input_data.has_key(core_name) , 'core data not found'
+            assert (core_name in input_data) , 'core data not found'
             input_data = input_data[core_name]
             
         #: if file_format
@@ -177,7 +180,7 @@ def save_data( file_name, data_dict, append=False ,
         if append == True and os.path.exists(file_name):
             # check file exists
             if not os.path.exists(file_name):
-                raise Exception , 'Cannot append, file does not exist: %s' % file_name  
+                raise Exception('Cannot append, file does not exist: %s' % file_name)
             # load old data
             data_dict_old = load( file_name   = file_name   ,
                                   var_names   = None        ,
@@ -185,7 +188,7 @@ def save_data( file_name, data_dict, append=False ,
                                   core_name   = core_name    )
             # check for keys not in new data
             for key,value in data_dict_old.iteritems():
-                if not data_dict.has_key(key):
+                if not(key in data_dict):
                     data_dict[key] = value
             #: for each dict item
         #: if append
@@ -236,28 +239,22 @@ def load_pickle(file_name):
     pkl_file.close()
     return data_dict
 
-#: def load_pickle()
-
-
 
 # -------------------------------------------------------------------
 #  Save Pickle
 # -------------------------------------------------------------------
 
-def save_pickle(file_name,data_dict):
-    """ save_pickle(file_name,data_dict)
+def save_pickle(file_name, data_dict):
+    """ save_pickle(file_name, data_dict)
         saves a core data dictionary
         first pickle entry is a list of all following data names
     """
-    pkl_file = open(file_name,'wb')
-    names = data_dict.keys()
-    pickle.dump(names,pkl_file)
+    pkl_file = open(file_name, 'wb')
+    names = list(data_dict.keys())
+    pickle.dump(names, pkl_file)
     for key in names:
-        pickle.dump(data_dict[key],pkl_file)
+        pickle.dump(data_dict[key], pkl_file)
     pkl_file.close()
-
-#: def save_pickle()
-
 
 
 # -------------------------------------------------------------------

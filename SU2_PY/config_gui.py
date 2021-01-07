@@ -3,24 +3,20 @@
 ## \file config_gui.py
 #  \brief _____________.
 #  \author A. Aranake
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -28,6 +24,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
+
+# make print(*args) function available in PY2.6+, does'nt work on PY < 2.6
+from __future__ import print_function
 
 from parse_config import *
 import wx, sys
@@ -209,10 +208,10 @@ class config_gui(wx.Frame):
     self.SetInitialSize()
 
   def OnCheck(self,event):
-    print event
-    print dir(event)
-    print event.GetEventObject()
-    print event.GetEventObject().GetValue()
+    print(event)
+    print(dir(event))
+    print(event.GetEventObject())
+    print(event.GetEventObject().GetValue())
 
   def OnResize(self,event):
   # There is surely a better way to do this....
@@ -270,7 +269,7 @@ class config_gui(wx.Frame):
     sys.exit(1)
 
   def OnAbout(self,event):
-    print "OnAbout"
+    print("OnAbout")
 
   def list_click(self, event):
 

@@ -3,24 +3,20 @@
 ## \file continuous_adjoint.py
 #  \brief Python script for continuous adjoint computation using the SU2 suite.
 #  \author F. Palacios, T. Economon, T. Lukaczyk
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -29,7 +25,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, shutil, copy
+import os, sys
 from optparse import OptionParser
 sys.path.append(os.environ['SU2_RUN'])
 import SU2
@@ -50,16 +46,20 @@ def main():
                       help="COMPUTE direct and adjoint problem", metavar="COMPUTE")
     parser.add_option("-s", "--step",       dest="step",       default=1E-4,
                       help="DOT finite difference STEP", metavar="STEP")    
+    parser.add_option("-z", "--zones", dest="nzones", default="1",
+                      help="Number of Zones", metavar="ZONES")
     
     (options, args)=parser.parse_args()
     options.partitions  = int( options.partitions )
     options.step        = float( options.step )
     options.compute     = options.compute.upper() == 'TRUE'
+    options.nzones      = int( options.nzones )
     
     continuous_adjoint( options.filename    ,
                         options.partitions  ,
                         options.compute     ,
-                        options.step         )
+                        options.step        , 
+                        options.nzones       )
         
 #: def main()
 
@@ -71,17 +71,25 @@ def main():
 def continuous_adjoint( filename           , 
                         partitions  = 0    , 
                         compute     = True ,
-                        step        = 1e-4  ):
+                        step        = 1e-4 ,
+                        nzones      = 1     ):
     
     # Config
     config = SU2.io.Config(filename)
     config.NUMBER_PART = partitions
-    
+    config.NZONES      = int( nzones )
+
     # State
     state = SU2.io.State()
     
     # Force CSV output in order to compute gradients
     config.WRT_CSV_SOL = 'YES'
+    
+    if not 'OUTPUT_FILES' in config:
+        config['OUTPUT_FILES'] = ['RESTART']
+
+    if not 'SURFACE_CSV' in config['OUTPUT_FILES']:
+        config['OUTPUT_FILES'].append('SURFACE_CSV')
     
     # check for existing files
     if not compute:
@@ -96,20 +104,12 @@ def continuous_adjoint( filename           ,
         state.update(info)
         SU2.io.restart2solution(config,state)
 
-    # If using chain rule update coefficients using gradients as defined in downstream_function (local file)
-    if config.OBJECTIVE_FUNCTION == 'OUTFLOW_GENERALIZED':
-        import downstream_function # Must be defined in run folder
-        chaingrad = downstream_function.downstream_gradient(config,state,step)
-        # Set coefficients for gradients
-        config.OBJ_CHAIN_RULE_COEFF = str(chaingrad[0:5])
-    
     # Adjoint Solution
+
+    # Run all-at-once 
     if compute:
         info = SU2.run.adjoint(config)
         state.update(info)
-        #SU2.io.restart2solution(config,state)
-    
-    # Gradient Projection
     info = SU2.run.projection(config,state, step)
     state.update(info)
     

@@ -1,31 +1,27 @@
-## \file config_options.py
+# \file config_options.py
 #  \brief python package for config
 #  \author T. Lukaczyk, F. Palacios
-#  \version 4.1.0 "Cardinal"
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
-#
-# SU2 is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
+# SU2 is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# 
+# SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU Lesser General Public
+# License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
 # ----------------------------------------------------------------------
 #  Imports
@@ -66,22 +62,27 @@ class DEFINITION_DV(ordered_bunch):
     """ SU2.io.config.DEFINITION_DV()
     
         List of design variables (Design variables are separated by semicolons)
-        - HICKS_HENNE ( 1, Scale | Mark. List | Lower(0)/Upper(1) side, x_Loc )
-        - COSINE_BUMP ( 2, Scale | Mark. List | Lower(0)/Upper(1) side, x_Loc, x_Size )
-        - SPHERICAL ( 3, Scale | Mark. List | ControlPoint_Index, Theta_Disp, R_Disp )
-        - NACA_4DIGITS ( 4, Scale | Mark. List |  1st digit, 2nd digit, 3rd and 4th digit )
-        - DISPLACEMENT ( 5, Scale | Mark. List | x_Disp, y_Disp, z_Disp )
-        - ROTATION ( 6, Scale | Mark. List | x_Axis, y_Axis, z_Axis, x_Turn, y_Turn, z_Turn )
-        - FFD_CONTROL_POINT ( 7, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind, k_Ind, x_Mov, y_Mov, z_Mov )
-        - FFD_DIHEDRAL_ANGLE ( 8, Scale | Mark. List | FFD_Box_ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-        - FFD_TWIST_ANGLE ( 9, Scale | Mark. List | FFD_Box_ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-        - FFD_ROTATION ( 10, Scale | Mark. List | FFD_Box_ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-        - FFD_CAMBER ( 11, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind )
-        - FFD_THICKNESS ( 12, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind )
-        - FOURIER ( 14, Scale | Mark. List | Lower(0)/Upper(1) side, index, cos(0)/sin(1) )
-        - FFD_CONTROL_POINT_2D ( 15, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind, x_Mov, y_Mov )
-        - FFD_CAMBER_2D ( 16, Scale | Mark. List | FFD_Box_ID, i_Ind )
-        - FFD_THICKNESS_2D ( 17, Scale | Mark. List | FFD_Box_ID, i_Ind )
+        2D Design variables
+    	   -FFD_CONTROL_POINT_2D (  19, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind, x_Mov, y_Mov )
+           -FFD_CAMBER_2D 	 (  20, Scale | Mark. List | FFD_BoxTag, i_Ind )
+	   -FFD_THICKNESS_2D 	 (  21, Scale | Mark. List | FFD_BoxTag, i_Ind )
+	   -FFD_TWIST_2D    	 (  22, Scale | Mark. List | FFD_BoxTag, x_Orig, y_Orig )
+   	   -HICKS_HENNE 	 (  30, Scale | Mark. List | Lower(0)/Upper(1) side, x_Loc )
+ 	   -ANGLE_OF_ATTACK	 ( 101, Scale | Mark. List | 1.0 )
+
+	3D Design variables
+ 	   -FFD_CONTROL_POINT    (  11, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind, k_Ind, x_Mov, y_Mov, z_Mov )
+ 	   -FFD_NACELLE          (  12, Scale | Mark. List | FFD_BoxTag, rho_Ind, theta_Ind, phi_Ind, rho_Mov, phi_Mov )
+  	   -FFD_GULL             (  13, Scale | Mark. List | FFD_BoxTag, j_Ind )
+ 	   -FFD_CAMBER      	 (  14, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind )
+     	   -FFD_TWIST    	 (  15, Scale | Mark. List | FFD_BoxTag, j_Ind, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
+           -FFD_THICKNESS 	 (  16, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind )
+  	   -FFD_ROTATION	 (  18, Scale | Mark. List | FFD_BoxTag, x_Axis, y_Axis, z_Axis, x_Turn, y_Turn, z_Turn )
+	   -FFD_ANGLE_OF_ATTACK  (  24, Scale | Mark. List | FFD_BoxTag, 1.0 )
+
+	Global design variables
+	   -TRANSLATION  ( 1, Scale | Mark. List | x_Disp, y_Disp, z_Disp )
+ 	   -ROTATION	 ( 2, Scale | Mark. List | x_Axis, y_Axis, z_Axis, x_Turn, y_Turn, z_Turn )
         
     """
     
@@ -114,24 +115,29 @@ class DEFINITION_DV(ordered_bunch):
 class DV_KIND(ordered_bunch):
   """ SU2.io.config.DV_KIND()
     
-    List of design variables (Design variables are separated by semicolons)
-    - HICKS_HENNE ( 1, Scale | Mark. List | Lower(0)/Upper(1) side, x_Loc )
-    - COSINE_BUMP ( 2, Scale | Mark. List | Lower(0)/Upper(1) side, x_Loc, x_Size )
-    - SPHERICAL ( 3, Scale | Mark. List | ControlPoint_Index, Theta_Disp, R_Disp )
-    - NACA_4DIGITS ( 4, Scale | Mark. List |  1st digit, 2nd digit, 3rd and 4th digit )
-    - DISPLACEMENT ( 5, Scale | Mark. List | x_Disp, y_Disp, z_Disp )
-    - ROTATION ( 6, Scale | Mark. List | x_Axis, y_Axis, z_Axis, x_Turn, y_Turn, z_Turn )
-    - FFD_CONTROL_POINT ( 7, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind, k_Ind, x_Mov, y_Mov, z_Mov )
-    - FFD_DIHEDRAL_ANGLE ( 8, Scale | Mark. List | FFD_Box_ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-    - FFD_TWIST_ANGLE ( 9, Scale | Mark. List | FFD_Box_ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-    - FFD_ROTATION ( 10, Scale | Mark. List | FFD_Box_ID, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
-    - FFD_CAMBER ( 11, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind )
-    - FFD_THICKNESS ( 12, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind )
-    - FOURIER ( 14, Scale | Mark. List | Lower(0)/Upper(1) side, index, cos(0)/sin(1) )
-    - FFD_CONTROL_POINT_2D ( 15, Scale | Mark. List | FFD_Box_ID, i_Ind, j_Ind, x_Mov, y_Mov )
-    - FFD_CAMBER_2D ( 16, Scale | Mark. List | FFD_Box_ID, i_Ind )
-    - FFD_THICKNESS_2D ( 17, Scale | Mark. List | FFD_Box_ID, i_Ind )
-    
+        List of design variables (Design variables are separated by semicolons)
+        2D Design variables
+    	   -FFD_CONTROL_POINT_2D (  19, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind, x_Mov, y_Mov )
+           -FFD_CAMBER_2D 	 (  20, Scale | Mark. List | FFD_BoxTag, i_Ind )
+	   -FFD_THICKNESS_2D 	 (  21, Scale | Mark. List | FFD_BoxTag, i_Ind )
+	   -FFD_TWIST_2D    	 (  22, Scale | Mark. List | FFD_BoxTag, x_Orig, y_Orig )
+   	   -HICKS_HENNE 	 (  30, Scale | Mark. List | Lower(0)/Upper(1) side, x_Loc )
+ 	   -ANGLE_OF_ATTACK	 ( 101, Scale | Mark. List | 1.0 )
+
+	3D Design variables
+ 	   -FFD_CONTROL_POINT    (  11, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind, k_Ind, x_Mov, y_Mov, z_Mov )
+ 	   -FFD_NACELLE          (  12, Scale | Mark. List | FFD_BoxTag, rho_Ind, theta_Ind, phi_Ind, rho_Mov, phi_Mov )
+  	   -FFD_GULL             (  13, Scale | Mark. List | FFD_BoxTag, j_Ind )
+ 	   -FFD_CAMBER      	 (  14, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind )
+     	   -FFD_TWIST    	 (  15, Scale | Mark. List | FFD_BoxTag, j_Ind, x_Orig, y_Orig, z_Orig, x_End, y_End, z_End )
+           -FFD_THICKNESS 	 (  16, Scale | Mark. List | FFD_BoxTag, i_Ind, j_Ind )
+  	   -FFD_ROTATION	 (  18, Scale | Mark. List | FFD_BoxTag, x_Axis, y_Axis, z_Axis, x_Turn, y_Turn, z_Turn )
+	   -FFD_ANGLE_OF_ATTACK  (  24, Scale | Mark. List | FFD_BoxTag, 1.0 )
+
+	Global design variables
+	   -TRANSLATION  ( 1, Scale | Mark. List | x_Disp, y_Disp, z_Disp )
+ 	   -ROTATION	 ( 2, Scale | Mark. List | x_Axis, y_Axis, z_Axis, x_Turn, y_Turn, z_Turn )
+        
     """
   
   def __init__(self,*args,**kwarg):

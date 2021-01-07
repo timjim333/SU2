@@ -3,23 +3,20 @@
 ## \file package_tests.py
 #  \brief _____________.
 #  \author T. Lukaczyk
+#  \version 7.0.8 "Blackbird"
 #
-# SU2 Lead Developers: Dr. Francisco Palacios (Francisco.D.Palacios@boeing.com).
-#                      Dr. Thomas D. Economon (economon@stanford.edu).
+# SU2 Project Website: https://su2code.github.io
+# 
+# The SU2 Project is maintained by the SU2 Foundation 
+# (http://su2foundation.org)
 #
-# SU2 Developers: Prof. Juan J. Alonso's group at Stanford University.
-#                 Prof. Piero Colonna's group at Delft University of Technology.
-#                 Prof. Nicolas R. Gauger's group at Kaiserslautern University of Technology.
-#                 Prof. Alberto Guardone's group at Polytechnic University of Milan.
-#                 Prof. Rafael Palacios' group at Imperial College London.
-#
-# Copyright (C) 2012-2015 SU2, the open-source CFD code.
+# Copyright 2012-2020, SU2 Contributors (cf. AUTHORS.md)
 #
 # SU2 is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-#
+# 
 # SU2 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
@@ -28,7 +25,10 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with SU2. If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys, shutil, copy
+# make print(*args) function available in PY2.6+, does'nt work on PY < 2.6
+from __future__ import print_function
+
+import os, sys, copy
 sys.path.append(os.environ['SU2_RUN'])
 import SU2
 
@@ -42,7 +42,6 @@ from collections import OrderedDict
 # plotting
 # verbose redirection
 # pyopt optimizers
-# verify server.py
 
 
 # needed config options
@@ -70,7 +69,7 @@ def main():
     
     mesh0()
     
-    print 'DONE!'
+    print('DONE!')
     
 def io0():
     folder='test_io0'; pull='config_NACA0012.cfg'; link='mesh_NACA0012.su2'
@@ -79,8 +78,9 @@ def io0():
         config_name = 'config_NACA0012.cfg'
         config = SU2.io.Config(filename=config_name)
         
-        print config
-        
+        print(config)
+
+
         config.ADAPT_CYCLES
         config['ADAPT_CYCLES']
         
@@ -92,7 +92,7 @@ def io0():
         
         config_diff = config.diff(konfig)
         
-        print config_diff
+        print(config_diff)
         
     
     wait = 0
@@ -148,7 +148,7 @@ def level1():
         info = SU2.run.projection(config)
         state.update(info)
         
-        print state
+        print(state)
         
         SU2.io.save_data('state.pkl',state)
         data = SU2.io.load_data('state.pkl')
@@ -259,7 +259,7 @@ def level4():
         data = project.data
         
     wait = 0
-    print "Done!"
+    print("Done!")
     
 def level5():
     folder='test_level5'; pull='config_NACA0012.cfg'; link='mesh_NACA0012.su2'
@@ -283,7 +283,7 @@ def level5():
         cons['INEQUALITY']['MOMENT_Z'] = {'SIGN':'>','VALUE':0.034068,'SCALE':1e-2}
         
         def_dv = config.DEFINITION_DV
-        n_dv   = len(def_dv['KIND'])
+        n_dv   = sum(def_dv['KIND'])
         def_dv['SCALE'] = [1.e0]*n_dv
         
         config.OPT_OBJECTIVE  = obj
